@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>DSP Optimization Service</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+
+    <link rel="stylesheet" href="/webjars/bootstrap/css/bootstrap.min.css">
+</head>
+<body class="p-4">
+
+<h3>Detective problem solver</h3>
+<div class="mb-4">
+    <p><strong>Insert new problem</strong></p>
+
+    <div class="row g-2">
+        <div class="col-md-2">
+            <input type="number" id="detectives" class="form-control" min="1" value="1"
+                   placeholder="Detectives">
+        </div>
+        <div class="col-md-2">
+            <input type="number" id="groups" class="form-control" min="1" value="1"
+                   placeholder="Groups">
+        </div>
+        <div class="col-md-2">
+            <input type="number" id="thieves" class="form-control" min="1" value="1"
+                   placeholder="Thieves">
+        </div>
+        <div class="col-md-2">
+            <button id="solveBtn" class="btn btn-primary">Solve</button>
+        </div>
+    </div>
+</div>
+
+<hr/>
+
+<div>
+    <p><strong>Existing solutions</strong></p>
+    <ol id="listofsolutions"></ol>
+</div>
+
+<pre id="result" class="mt-3"></pre>
+
+<script src="/webjars/jquery/jquery.min.js"></script>
+<script src="/webjars/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/list.js"></script>
+</body>
+</html>
