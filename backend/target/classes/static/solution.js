@@ -193,5 +193,91 @@ $(document).ready(function () {
 
             $('[data-bs-toggle="popover"]').popover();
         });
+         $.getJSON("/dsp/" + id + "/score-explanation", function (indictments) {
+
+                    const indictmentMap = buildIndictmentMap(indictments);
+
+                    // solution.groups is list of IDs (numbers)
+                    const groupIds = solution.groups || [];
+
+                    // Build groupMap from the group objects that exist inside detective.groups
+                    const groupMap = {};
+                    (solution.detectives || []).forEach(d => {
+                        (d.groups || []).forEach(g => {
+                            groupMap[g.id] = g;
+                        });
+                    });
+
+                    function getGroupObj(groupId) {
+                        // If unassigned group has no object anywhere, create a placeholder for popovers/header
+                        return groupMap[groupId] || {
+                            id: groupId,
+                            experience: null,
+                            thieves: [],
+                            meetingTime: { from: null, to: null }
+                        };
+                    }
+
+                    // header
+                    groupIds.forEach(gid => {
+                        $("#groupHeader").append("<th>Group " + gid + "</th>");
+                    });
+
+                    // rows
+                    (solution.detectives || []).forEach(d => {
+                        const row = $("<tr></tr>");
+
+                        const dKey = "Detective_" + d.id;
+                        const dInd = indictmentMap[dKey];
+                        const dBad = detectiveHasRealHardViolation(dInd);
+
+                        row.append(
+                            $("<td></td>").append(
+                                '<span class="badge ' + (dBad ? "bg-danger" : "bg-success") + '" ' +
+                                'data-bs-toggle="popover" data-bs-html="true" ' +
+                                'data-bs-content="' + detectivePopover(d, dInd) + '">' +
+                                "Detective " + d.id +
+                                "</span>"
+                            )
+                        );
+
+                        groupIds.forEach(gid => {
+                            const hasGroup = (d.groups || []).some(gr => gr.id === gid);
+                            const gObj = getGroupObj(gid);
+
+                            const gKey = "Group_" + gid;
+                            const gInd = indictmentMap[gKey];
+                            const gBad = gInd && getHardScore(gInd.score) < 0;
+
+                            const cell = $("<td></td>");
+
+                            if (hasGroup) {
+                                cell.append(
+                                    '<span class="badge ' + (gBad ? "bg-danger" : "bg-success") + '" ' +
+                                    'data-bs-toggle="popover" data-bs-html="true" ' +
+                                    'data-bs-content="' + groupPopover(gObj, gInd) + '">' +
+                                     gKey +
+                                    "</span>"
+                                );
+                            } else {
+                                // still allow popover on unassigned group cell if you want:
+                                // cell.text("-");
+                                cell.append(
+                                    '<span class="badge bg-secondary" ' +
+                                    'data-bs-toggle="popover" data-bs-html="true" ' +
+                                    'data-bs-content="' + groupPopover(gObj, gInd) + '">' +
+                                    "-" +
+                                    "</span>"
+                                );
+                            }
+
+                            row.append(cell);
+                        });
+
+                        $("#scheduleBody").append(row);
+                    });
+
+                    $('[data-bs-toggle="popover"]').popover();
+                });
     });
 });

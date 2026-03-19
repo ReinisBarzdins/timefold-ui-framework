@@ -12,9 +12,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import timefold.ui.backend.bedallocation.domain.BedPlan;
+import timefold.ui.backend.dto.ConstraintDTO;
+import timefold.ui.backend.dto.IndictmentDTO;
+import timefold.ui.backend.dto.MatchDTO;
+import timefold.ui.backend.dto.ScoreExplanationDTO;
+import timefold.ui.backend.service.ScoreExplanationService;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -26,10 +34,12 @@ public class Controller {
     private final ConcurrentMap<String, Job> jobIdToJob = new ConcurrentHashMap<>();
     @Autowired
     private final SolutionManager<BedPlan, HardMediumSoftScore> solutionManager;
+    private final ScoreExplanationService scoreExplanationService;
 
-    public Controller(SolverManager<BedPlan, String> solverManager, SolutionManager<BedPlan, HardMediumSoftScore> solutionManager) {
+    public Controller(SolverManager<BedPlan, String> solverManager, SolutionManager<BedPlan, HardMediumSoftScore> solutionManager, ScoreExplanationService scoreExplanationService) {
         this.solverManager = solverManager;
         this.solutionManager = solutionManager;
+        this.scoreExplanationService = scoreExplanationService;
     }
 
     @GetMapping
@@ -74,55 +84,68 @@ public class Controller {
     }
 
     @GetMapping(value = "/{jobId}/explain-debug", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Object> explainDebug(@PathVariable("jobId") String jobId) {
+    public ScoreExplanationDTO explainDebug(@PathVariable("jobId") String jobId) {
 
         BedPlan solution = getScheduleAndCheckForExceptions(jobId);
         ScoreExplanation<BedPlan, HardMediumSoftScore> explanation =
                 solutionManager.explain(solution);
 
-        Map<String, Object> result = new LinkedHashMap<>();
-        result.put("score", explanation.getScore().toString());
-        result.put("summary", explanation.getSummary());
-
-        Map<String, Object> constraints = new LinkedHashMap<>();
+        ScoreExplanationDTO result = new ScoreExplanationDTO();
+        List<ConstraintDTO> constraints = new ArrayList<>();
+        List<IndictmentDTO> indictments = new ArrayList<>();
 
         explanation.getConstraintMatchTotalMap().forEach((k, v) -> {
+            ConstraintDTO constraint = new ConstraintDTO();
+            constraint.setName(k);
+            constraint.setImpactTotal(v.getScore().toString());
+            constraint.setMatchCount(v.getConstraintMatchSet().size());
 
-            Map<String, Object> constraintData = new LinkedHashMap<>();
-
-            constraintData.put("impactTotal", v.getScore().toString());
-            constraintData.put("matchCount", v.getConstraintMatchSet().size());
-
-            List<Map<String, Object>> sampleMatches = new ArrayList<>();
-
-            v.getConstraintMatchSet()
+            List<MatchDTO> sampleMatches = v.getConstraintMatchSet()
                     .stream()
                     .limit(3)
-                    .forEach(match -> {
+                    .map(match -> {
 
-                        Map<String, Object> matchData = new LinkedHashMap<>();
-
-                        matchData.put("impact", match.getScore().toString());
+                        MatchDTO matchDto = new MatchDTO();
+                        matchDto.setImpact(match.getScore().toString());
 
                         List<String> objects = match.getIndictedObjectList()
                                 .stream()
                                 .map(Object::toString)
                                 .toList();
 
-                        matchData.put("objects", objects);
+                        matchDto.setObjects(objects);
 
-                        sampleMatches.add(matchData);
-                    });
+                        return matchDto;
 
-            constraintData.put("sampleMatches", sampleMatches);
+                    })
+                    .toList();
 
-            constraints.put(k, constraintData);
+            constraint.setSampleMatches(sampleMatches);
+
+            constraints.add(constraint);
         });
 
-        result.put("constraints", constraints);
+        explanation.getIndictmentMap().forEach((obj, indictment) -> {
+            IndictmentDTO indictmentDTO = new IndictmentDTO();
+
+            indictmentDTO.setObject(obj.toString());
+            indictmentDTO.setImpactTotal(indictment.getScore().toString());
+
+            indictments.add(indictmentDTO);
+        });
+
+        result.setScore(explanation.getScore().toString());
+        result.setIndictments(indictments);
+        result.setConstraints(constraints);
 
 
         return result;
+    }
+
+    @GetMapping("/{jobId}/score-explanation")
+    public ScoreExplanationDTO explain(@PathVariable String jobId) {
+        BedPlan solution = getScheduleAndCheckForExceptions(jobId);
+        return scoreExplanationService.explain(solution);
     }
 //
 //    @GetMapping(value = "/score/{jobId}", produces = MediaType.APPLICATION_JSON_VALUE)
