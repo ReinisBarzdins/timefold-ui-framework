@@ -1,7 +1,7 @@
 package timefold.ui.backend.controller;
 
 import ai.timefold.solver.core.api.score.ScoreExplanation;
-import ai.timefold.solver.core.api.score.buildin.hardmediumsoft.HardMediumSoftScore;
+import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
 import ai.timefold.solver.core.api.solver.SolutionManager;
 import ai.timefold.solver.core.api.solver.SolverManager;
 import ai.timefold.solver.core.api.solver.SolverStatus;
@@ -11,12 +11,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import timefold.ui.backend.bedallocation.domain.BedPlan;
-import timefold.ui.backend.dto.ConstraintDTO;
-import timefold.ui.backend.dto.IndictmentDTO;
-import timefold.ui.backend.dto.MatchDTO;
-import timefold.ui.backend.dto.ScoreExplanationDTO;
+import timefold.ui.backend.dto.*;
 import timefold.ui.backend.service.ScoreExplanationService;
+import timefold.ui.backend.service.SolutionStructureService;
+import timefold.ui.backend.sportsleagueschedule.domain.LeagueSchedule;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -30,16 +28,23 @@ import java.util.concurrent.ConcurrentMap;
 @Slf4j
 @RequestMapping("/dsp")
 public class Controller {
-    private final SolverManager<BedPlan, String> solverManager;
+    private final SolverManager<LeagueSchedule, String> solverManager;
     private final ConcurrentMap<String, Job> jobIdToJob = new ConcurrentHashMap<>();
     @Autowired
-    private final SolutionManager<BedPlan, HardMediumSoftScore> solutionManager;
+    private final SolutionManager<LeagueSchedule, HardSoftScore> solutionManager;
     private final ScoreExplanationService scoreExplanationService;
+    private final SolutionStructureService solutionStructureService;
 
-    public Controller(SolverManager<BedPlan, String> solverManager, SolutionManager<BedPlan, HardMediumSoftScore> solutionManager, ScoreExplanationService scoreExplanationService) {
+    public Controller(
+            SolverManager<LeagueSchedule, String> solverManager,
+            SolutionManager<LeagueSchedule, HardSoftScore> solutionManager,
+            ScoreExplanationService scoreExplanationService,
+            SolutionStructureService solutionStructureService
+    ) {
         this.solverManager = solverManager;
         this.solutionManager = solutionManager;
         this.scoreExplanationService = scoreExplanationService;
+        this.solutionStructureService = solutionStructureService;
     }
 
     @GetMapping
@@ -49,8 +54,9 @@ public class Controller {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.TEXT_PLAIN_VALUE)
     public String solve() {
-        DemoDataGenerator dataGenerator = new DemoDataGenerator();
-        BedPlan problem = dataGenerator.generateDemoData();
+        DemoDataGenerator demoDataGenerator = new DemoDataGenerator();
+
+        LeagueSchedule problem = demoDataGenerator.generateDemoData();
         String jobId = UUID.randomUUID().toString();
         jobIdToJob.put(jobId, Job.ofSchedule(problem));
         solverManager.solveBuilder()
@@ -66,19 +72,19 @@ public class Controller {
     }
 
     @GetMapping(value = "/{jobId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public BedPlan getDSPsolution(
+    public LeagueSchedule getDSPsolution(
             @Parameter(description = "The job ID returned by the POST method.") @PathVariable("jobId") String jobId) {
-        BedPlan problem = getScheduleAndCheckForExceptions(jobId);
+        LeagueSchedule problem = getScheduleAndCheckForExceptions(jobId);
         SolverStatus solverStatus = solverManager.getSolverStatus(jobId);
         problem.setSolverStatus(solverStatus);
         return problem;
     }
 
     @GetMapping(value = "/{jobId}/explain", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ScoreExplanation<BedPlan, HardMediumSoftScore> explainScore(
+    public ScoreExplanation<LeagueSchedule, HardSoftScore> explainScore(
             @PathVariable("jobId") String jobId) {
 
-        BedPlan solution = getScheduleAndCheckForExceptions(jobId);
+        LeagueSchedule solution = getScheduleAndCheckForExceptions(jobId);
 
         return solutionManager.explain(solution);
     }
@@ -86,8 +92,8 @@ public class Controller {
     @GetMapping(value = "/{jobId}/explain-debug", produces = MediaType.APPLICATION_JSON_VALUE)
     public ScoreExplanationDTO explainDebug(@PathVariable("jobId") String jobId) {
 
-        BedPlan solution = getScheduleAndCheckForExceptions(jobId);
-        ScoreExplanation<BedPlan, HardMediumSoftScore> explanation =
+        LeagueSchedule solution = getScheduleAndCheckForExceptions(jobId);
+        ScoreExplanation<LeagueSchedule, HardSoftScore> explanation =
                 solutionManager.explain(solution);
 
         ScoreExplanationDTO result = new ScoreExplanationDTO();
@@ -144,7 +150,7 @@ public class Controller {
 
     @GetMapping("/{jobId}/score-explanation")
     public ScoreExplanationDTO explain(@PathVariable String jobId) {
-        BedPlan solution = getScheduleAndCheckForExceptions(jobId);
+        LeagueSchedule solution = getScheduleAndCheckForExceptions(jobId);
         return scoreExplanationService.explain(solution);
     }
 //
@@ -170,8 +176,14 @@ public class Controller {
 //                }).collect(Collectors.toList());
 //    }
 
+    @GetMapping(value = "/{jobId}/solution-structure", produces = MediaType.APPLICATION_JSON_VALUE)
+    public SolutionStructureDTO getSolutionStructure(@PathVariable("jobId") String jobId) {
+        LeagueSchedule solution = getScheduleAndCheckForExceptions(jobId);
+        return solutionStructureService.buildSolutionStructure(solution);
+    }
 
-    private BedPlan getScheduleAndCheckForExceptions(String jobId) {
+
+    private LeagueSchedule getScheduleAndCheckForExceptions(String jobId) {
         Job job = jobIdToJob.get(jobId);
         if (job == null) {
             throw new Exeption(jobId, HttpStatus.NOT_FOUND, "No schedule found.");
@@ -183,9 +195,9 @@ public class Controller {
     }
 
 
-    private record Job(BedPlan schedule, LocalDateTime createdAt, Throwable exception) {
+    private record Job(LeagueSchedule schedule, LocalDateTime createdAt, Throwable exception) {
 
-        static Job ofSchedule(BedPlan schedule) {
+        static Job ofSchedule(LeagueSchedule schedule) {
             return new Job(schedule, LocalDateTime.now(), null);
         }
 
