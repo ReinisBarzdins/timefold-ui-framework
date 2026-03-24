@@ -25,9 +25,7 @@ public class ScoreExplanationMapper {
 
             List<MatchDTO> sampleMatches = v.getConstraintMatchSet()
                     .stream()
-                    .limit(3)
                     .map(match -> {
-
                         MatchDTO matchDto = new MatchDTO();
                         matchDto.setImpact(match.getScore().toString());
 
@@ -39,7 +37,6 @@ public class ScoreExplanationMapper {
                         matchDto.setObjects(objects);
 
                         return matchDto;
-
                     })
                     .toList();
 
@@ -51,7 +48,7 @@ public class ScoreExplanationMapper {
             IndictmentDTO indictmentDTO = new IndictmentDTO();
             indictmentDTO.setObject(obj.toString());
             indictmentDTO.setImpactTotal(indictment.getScore().toString());
-
+            
             indictments.add(indictmentDTO);
         });
 

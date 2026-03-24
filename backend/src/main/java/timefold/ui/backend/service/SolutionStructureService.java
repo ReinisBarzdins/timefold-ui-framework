@@ -4,8 +4,6 @@ import ai.timefold.solver.core.api.domain.solution.PlanningEntityCollectionPrope
 import ai.timefold.solver.core.api.domain.solution.ProblemFactCollectionProperty;
 import ai.timefold.solver.core.api.domain.variable.PlanningListVariable;
 import ai.timefold.solver.core.api.domain.variable.PlanningVariable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import timefold.ui.backend.dto.EntityGroupDTO;
 import timefold.ui.backend.dto.EntityInstanceDTO;
@@ -22,8 +20,6 @@ import java.util.Map;
 @Service
 public class SolutionStructureService {
 
-    private static final Logger log = LoggerFactory.getLogger(SolutionStructureService.class);
-
     private final TimefoldAnnotationHelper helper;
 
     public SolutionStructureService(TimefoldAnnotationHelper helper) {
@@ -31,26 +27,11 @@ public class SolutionStructureService {
     }
 
     public SolutionStructureDTO buildSolutionStructure(Object solution) {
-
-        List<AnnotatedCollectionResult> entityCollections =
-                helper.findAnnotatedCollections(solution, PlanningEntityCollectionProperty.class);
-
-        List<AnnotatedCollectionResult> factCollections =
-                helper.findAnnotatedCollections(solution, ProblemFactCollectionProperty.class);
-
-
-        entityCollections.forEach(r ->
-                log.debug("Entity collection: {} size={}", r.fieldName(), r.collection().size())
-        );
-
-        factCollections.forEach(r ->
-                log.debug("Fact collection: {} size={}", r.fieldName(), r.collection().size())
-        );
-
+        List<AnnotatedCollectionResult> entityCollections = helper.findAnnotatedCollections(solution, PlanningEntityCollectionProperty.class);
+        List<AnnotatedCollectionResult> factCollections = helper.findAnnotatedCollections(solution, ProblemFactCollectionProperty.class);
 
         SolutionStructureDTO dto = new SolutionStructureDTO();
         dto.setSolutionClass(solution.getClass().getSimpleName());
-
         dto.setEntityGroups(mapCollectionsToGroups(entityCollections));
         dto.setProblemFactGroups(mapCollectionsToGroups(factCollections));
 
@@ -58,13 +39,10 @@ public class SolutionStructureService {
     }
 
     private List<EntityGroupDTO> mapCollectionsToGroups(List<AnnotatedCollectionResult> collections) {
-
         List<EntityGroupDTO> groups = new ArrayList<>();
 
         for (AnnotatedCollectionResult result : collections) {
-
             EntityGroupDTO group = new EntityGroupDTO();
-
             String entityClass = result.collection().isEmpty()
                     ? result.fieldName()
                     : result.collection().iterator().next().getClass().getSimpleName();
@@ -94,18 +72,16 @@ public class SolutionStructureService {
             return planningVariables;
         }
 
-        Class<?> clazz = entity.getClass();
+        Class<?> sourceClass = entity.getClass();
 
-        for (Field field : clazz.getDeclaredFields()) {
+        for (Field field : sourceClass.getDeclaredFields()) {
             try {
                 field.setAccessible(true);
 
                 if (field.isAnnotationPresent(PlanningVariable.class)) {
                     Object value = field.get(entity);
                     planningVariables.put(field.getName(), formatObject(value));
-                }
-
-                if (field.isAnnotationPresent(PlanningListVariable.class)) {
+                } else if (field.isAnnotationPresent(PlanningListVariable.class)) {
                     Object value = field.get(entity);
 
                     if (value instanceof List<?> listValue) {
@@ -118,7 +94,6 @@ public class SolutionStructureService {
                         planningVariables.put(field.getName(), null);
                     }
                 }
-
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(
                         "Failed to access planning variable field: " + field.getName(), e

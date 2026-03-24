@@ -10,7 +10,6 @@ import java.util.List;
 
 @Component
 public class TimefoldAnnotationHelper {
-
     public List<AnnotatedCollectionResult> findAnnotatedCollections(
             Object source,
             Class<? extends Annotation> annotationClass
@@ -21,9 +20,9 @@ public class TimefoldAnnotationHelper {
             return result;
         }
 
-        Class<?> clazz = source.getClass();
+        Class<?> sourceClass = source.getClass();
 
-        for (Field field : clazz.getDeclaredFields()) {
+        for (Field field : sourceClass.getDeclaredFields()) {
             if (!field.isAnnotationPresent(annotationClass)) {
                 continue;
             }
@@ -47,6 +46,4 @@ public class TimefoldAnnotationHelper {
 
         return result;
     }
-
-
 }
