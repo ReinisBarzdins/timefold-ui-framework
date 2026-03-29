@@ -6,7 +6,7 @@ import ai.timefold.solver.core.api.domain.variable.PlanningListVariable;
 import ai.timefold.solver.core.api.domain.variable.PlanningVariable;
 import org.springframework.stereotype.Service;
 import timefold.ui.backend.dto.EntityGroupDTO;
-import timefold.ui.backend.dto.EntityInstanceDTO;
+import timefold.ui.backend.dto.EntityInstanceType;
 import timefold.ui.backend.dto.SolutionStructureDTO;
 import timefold.ui.backend.helpers.AnnotatedCollectionResult;
 import timefold.ui.backend.helpers.TimefoldAnnotationHelper;
@@ -49,9 +49,9 @@ public class SolutionStructureService {
 
             group.setEntityClass(entityClass);
 
-            List<EntityInstanceDTO> entities = result.collection().stream()
+            List<EntityInstanceType> entities = result.collection().stream()
                     .map(item -> {
-                        EntityInstanceDTO entity = new EntityInstanceDTO();
+                        EntityInstanceType entity = new EntityInstanceType();
                         entity.setLabel(formatObject(item));
                         entity.setPlanningVariables(extractPlanningVariables(item));
                         return entity;
