@@ -1,32 +1,28 @@
 import { useJobList } from "../queries/getJobList.ts";
-import { useJob } from "../queries/getJob.ts";
-import { useSolutionStructure } from "../queries/getSolutionStructure.ts";
-import { useScoreExplanation } from "../queries/getScoreExplanation.ts";
+import { useState } from "react";
+import { JobSidebar } from "../components/JobSidebar.tsx";
+import { MainContent } from "../components/MainContent.tsx";
 
 const Timestruct = () => {
-  const { data: jobList } = useJobList();
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
-  console.log(jobList)
+  const { data, isLoading, error } = useJobList();
 
-  if (jobList && jobList?.length > 0) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { data: job } = useJob(jobList[0]);
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { data: score } = useScoreExplanation(jobList[0]);
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { data: solver } = useSolutionStructure(jobList[0]);
-
-    console.log(job);
-    console.log(score);
-    console.log(solver);
-    
-  }
 
   return (
-    <>
-      <div>cav</div>
-    </>
-  )
+    <div style={{ display: "flex" }}>
+      <JobSidebar
+        jobs={data ?? []}
+        selectedJobId={selectedJobId}
+        onSelectJob={setSelectedJobId}
+        isLoading={isLoading}
+        error={error?.message ?? null}
+      />
+      {selectedJobId && (
+        <MainContent selectedJobId={selectedJobId}/>
+      )}
+    </div>
+  );
 }
 
 export default Timestruct;

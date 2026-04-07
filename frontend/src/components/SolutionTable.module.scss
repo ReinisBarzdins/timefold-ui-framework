@@ -1,0 +1,52 @@
+.item {
+  padding: 0 32px;
+  margin: 4px 8px;
+  background-color: #ffffffde;
+  color: #242424;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50px;
+  text-align: center;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.itemText {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.itemSmall {
+  padding: 12px 20px;
+}
+
+.itemSmall .itemText {
+  font-size: 12px;
+}
+
+.itemXSmall {
+  padding: 10px 14px;
+}
+
+.itemXSmall .itemText {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.itemHard {
+  background-color: #fecaca;
+}
+
+.itemMedium {
+  background-color: #fed7aa;
+}
+
+.itemSoft {
+  background-color: #fef08a;
+}
+
+.itemNone {
+  background-color: #dcfce7;
+}
