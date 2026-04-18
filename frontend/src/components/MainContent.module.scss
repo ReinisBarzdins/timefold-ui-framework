@@ -1,0 +1,33 @@
+.mainContent {
+  > div:not(:last-child) {
+    margin-bottom: 16px;
+  }
+}
+
+.entitiesContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.title {
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.jobText {
+  font-style: italic;
+  font-weight: 600;
+}
+
+.entitiesButton {
+  background-color: #ffffff;
+  color: #1a1a1a;
+  font-weight: 400;
+}
+
+.scoreContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

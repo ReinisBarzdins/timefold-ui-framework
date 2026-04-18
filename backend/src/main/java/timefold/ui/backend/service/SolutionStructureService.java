@@ -1,21 +1,19 @@
 package timefold.ui.backend.service;
 
+import ai.timefold.solver.core.api.domain.lookup.PlanningId;
 import ai.timefold.solver.core.api.domain.solution.PlanningEntityCollectionProperty;
 import ai.timefold.solver.core.api.domain.solution.ProblemFactCollectionProperty;
 import ai.timefold.solver.core.api.domain.variable.PlanningListVariable;
 import ai.timefold.solver.core.api.domain.variable.PlanningVariable;
 import org.springframework.stereotype.Service;
 import timefold.ui.backend.dto.EntityGroupDTO;
-import timefold.ui.backend.dto.EntityInstanceType;
+import timefold.ui.backend.dto.EntityInstanceDTO;
 import timefold.ui.backend.dto.SolutionStructureDTO;
 import timefold.ui.backend.helpers.AnnotatedCollectionResult;
 import timefold.ui.backend.helpers.TimefoldAnnotationHelper;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class SolutionStructureService {
@@ -26,7 +24,7 @@ public class SolutionStructureService {
         this.helper = helper;
     }
 
-    public SolutionStructureDTO buildSolutionStructure(Object solution) {
+    public SolutionStructureDTO buildSolutionStructure(Object solution, Object solverStatus) {
         List<AnnotatedCollectionResult> entityCollections = helper.findAnnotatedCollections(solution, PlanningEntityCollectionProperty.class);
         List<AnnotatedCollectionResult> factCollections = helper.findAnnotatedCollections(solution, ProblemFactCollectionProperty.class);
 
@@ -34,7 +32,7 @@ public class SolutionStructureService {
         dto.setSolutionClass(solution.getClass().getSimpleName());
         dto.setEntityGroups(mapCollectionsToGroups(entityCollections));
         dto.setProblemFactGroups(mapCollectionsToGroups(factCollections));
-
+        dto.setSolverStatus(resolveSolverStatus(solution, solverStatus));
         return dto;
     }
 
@@ -49,11 +47,13 @@ public class SolutionStructureService {
 
             group.setEntityClass(entityClass);
 
-            List<EntityInstanceType> entities = result.collection().stream()
+            List<EntityInstanceDTO> entities = result.collection().stream()
                     .map(item -> {
-                        EntityInstanceType entity = new EntityInstanceType();
+                        EntityInstanceDTO entity = new EntityInstanceDTO();
+                        entity.setId(extractEntityId(item));
                         entity.setLabel(formatObject(item));
                         entity.setPlanningVariables(extractPlanningVariables(item));
+                        entity.setDetails(extractEntityDetails(item));
                         return entity;
                     })
                     .toList();
@@ -104,6 +104,184 @@ public class SolutionStructureService {
         return planningVariables;
     }
 
+    private String extractEntityId(Object entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        Class<?> sourceClass = entity.getClass();
+
+        for (Field field : sourceClass.getDeclaredFields()) {
+            try {
+                field.setAccessible(true);
+
+                if (field.isAnnotationPresent(PlanningId.class)) {
+                    Object value = field.get(entity);
+                    return value != null ? String.valueOf(value) : null;
+                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(
+                        "Failed to access planning id field: " + field.getName(), e
+                );
+            }
+        }
+
+        for (Field field : sourceClass.getDeclaredFields()) {
+            try {
+                field.setAccessible(true);
+
+                if ("id".equalsIgnoreCase(field.getName())) {
+                    Object value = field.get(entity);
+                    return value != null ? String.valueOf(value) : null;
+                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(
+                        "Failed to access id field: " + field.getName(), e
+                );
+            }
+        }
+
+        return formatObject(entity);
+    }
+
+    private Map<String, Object> extractEntityDetails(Object entity) {
+        Map<String, Object> details = new LinkedHashMap<>();
+
+        if (entity == null) {
+            return details;
+        }
+
+        Class<?> sourceClass = entity.getClass();
+
+        for (Field field : sourceClass.getDeclaredFields()) {
+            try {
+                field.setAccessible(true);
+                Object value = field.get(entity);
+
+                if (shouldSkipDetailField(field.getName(), value)) {
+                    continue;
+                }
+
+                details.put(field.getName(), normalizeDetailValue(value));
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(
+                        "Failed to access detail field: " + field.getName(), e
+                );
+            }
+        }
+
+        return details;
+    }
+
+    private boolean shouldSkipDetailField(String fieldName, Object value) {
+        if ("score".equalsIgnoreCase(fieldName) || "solverStatus".equalsIgnoreCase(fieldName)) {
+            return true;
+        }
+
+        return value instanceof Map<?, ?>;
+    }
+
+    private Object normalizeDetailValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof String || value instanceof Number || value instanceof Boolean) {
+            return value;
+        }
+
+        if (value instanceof List<?> list) {
+            boolean isSimpleList = list.stream().allMatch(item ->
+                    item instanceof String ||
+                            item instanceof Number ||
+                            item instanceof Boolean
+            );
+
+            if (isSimpleList) {
+                return list;
+            }
+
+            return list.stream()
+                    .map(this::normalizeRelatedObject)
+                    .toList();
+        }
+
+        return formatObject(value);
+    }
+
+    private Object normalizeRelatedObject(Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof String || value instanceof Number || value instanceof Boolean) {
+            return value;
+        }
+
+        Map<String, Object> relatedObject = new LinkedHashMap<>();
+        relatedObject.put("id", extractEntityId(value));
+        relatedObject.put("label", formatObject(value));
+        relatedObject.put("details", extractShallowDetails(value));
+        return relatedObject;
+    }
+
+    private Map<String, Object> extractShallowDetails(Object entity) {
+        Map<String, Object> details = new LinkedHashMap<>();
+
+        if (entity == null) {
+            return details;
+        }
+
+        Class<?> sourceClass = entity.getClass();
+
+        for (Field field : sourceClass.getDeclaredFields()) {
+            try {
+                field.setAccessible(true);
+                Object value = field.get(entity);
+
+                if (shouldSkipDetailField(field.getName(), value)) {
+                    continue;
+                }
+
+                details.put(field.getName(), normalizeShallowDetailValue(value));
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(
+                        "Failed to access shallow detail field: " + field.getName(), e
+                );
+            }
+        }
+
+        return details;
+    }
+
+    private Object normalizeShallowDetailValue(Object value) {
+        if (value == null) {
+            return null;
+        }
+
+        if (value instanceof String || value instanceof Number || value instanceof Boolean) {
+            return value;
+        }
+
+        if (value instanceof Collection<?> collection) {
+            boolean isSimpleCollection = collection.stream().allMatch(item ->
+                    item instanceof String ||
+                            item instanceof Number ||
+                            item instanceof Boolean
+            );
+
+            if (isSimpleCollection) {
+                return new ArrayList<>(collection);
+            }
+
+            return collection.stream()
+                    .map(this::formatObject)
+                    .toList();
+        }
+
+        return formatObject(value);
+    }
+
     private String formatObject(Object obj) {
         if (obj == null) {
             return null;
@@ -116,5 +294,42 @@ public class SolutionStructureService {
         }
 
         return str;
+    }
+
+    private String resolveSolverStatus(Object solution, Object solverStatus) {
+        if (solverStatus != null) {
+            return String.valueOf(solverStatus);
+        }
+
+        return extractSolverStatus(solution);
+    }
+
+    private String extractSolverStatus(Object solution) {
+        if (solution == null) {
+            return null;
+        }
+
+        Class<?> currentClass = solution.getClass();
+
+        while (currentClass != null && currentClass != Object.class) {
+            for (Field field : currentClass.getDeclaredFields()) {
+                try {
+                    field.setAccessible(true);
+
+                    if ("solverStatus".equalsIgnoreCase(field.getName())) {
+                        Object value = field.get(solution);
+                        return value != null ? String.valueOf(value) : null;
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException(
+                            "Failed to access solver status field: " + field.getName(), e
+                    );
+                }
+            }
+
+            currentClass = currentClass.getSuperclass();
+        }
+
+        return null;
     }
 }

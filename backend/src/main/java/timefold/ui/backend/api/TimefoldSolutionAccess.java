@@ -6,4 +6,6 @@ public interface TimefoldSolutionAccess {
     Collection<String> listJobIds();
 
     Object getSolution(String jobId);
+
+    Object getSolverStatus(String jobId);
 }

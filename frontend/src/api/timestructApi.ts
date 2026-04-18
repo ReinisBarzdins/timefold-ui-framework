@@ -16,10 +16,6 @@ export function fetchJobList(): Promise<string[]> {
   return fetchJson<string[]>("/timestruct");
 }
 
-export function fetchJob(jobId: string): Promise<unknown> {
-  return fetchJson<unknown>(`/timestruct/${jobId}`);
-}
-
 export function fetchSolutionStructure(jobId: string): Promise<SolutionStructureType> {
   return fetchJson<SolutionStructureType>(`/timestruct/${jobId}/solution-structure`);
 }

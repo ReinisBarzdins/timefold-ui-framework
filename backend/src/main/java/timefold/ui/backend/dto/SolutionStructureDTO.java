@@ -11,4 +11,5 @@ public class SolutionStructureDTO {
     private String solutionClass;
     private List<EntityGroupDTO> entityGroups;
     private List<EntityGroupDTO> problemFactGroups;
+    private String solverStatus;
 }

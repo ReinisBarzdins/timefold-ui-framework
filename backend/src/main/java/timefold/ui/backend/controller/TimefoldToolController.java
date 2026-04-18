@@ -52,7 +52,8 @@ public class TimefoldToolController {
     @GetMapping(value = "/{jobId}/solution-structure", produces = MediaType.APPLICATION_JSON_VALUE)
     public SolutionStructureDTO getSolutionStructure(@PathVariable String jobId) {
         Object solution = requireSolution(jobId);
-        return solutionStructureService.buildSolutionStructure(solution);
+        Object solverStatus = solutionAccess.getSolverStatus(jobId);
+        return solutionStructureService.buildSolutionStructure(solution, solverStatus);
     }
 
     private Object requireSolution(String jobId) {
@@ -61,7 +62,7 @@ public class TimefoldToolController {
         if (solution == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No solution found for jobId=" + jobId);
         }
-        
+
         return solution;
     }
 }

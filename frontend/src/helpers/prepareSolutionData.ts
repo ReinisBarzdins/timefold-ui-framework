@@ -1,9 +1,20 @@
 import type { SolutionStructureType } from "../types/SolutionStructureType.ts";
 import type { EntityGroupType } from "../types/EntityGroupType.ts";
+import type { EntityInstanceType } from "../types/EntityInstanceType.ts";
+
+export type EntityInstanceFrontendType = EntityInstanceType & {
+  scoreExplanation?: {
+    hard: number | null;
+    medium: number | null;
+    soft: number | null;
+    explanation: string | null;
+  }[];
+};
 
 export interface GroupedEntityBucket {
   groupValue: string;
-  labels: string[];
+  entities: EntityInstanceFrontendType[];
+  rowEntity?: EntityInstanceFrontendType | null;
 }
 
 export interface GroupedEntityResult {
@@ -14,23 +25,115 @@ export interface GroupedEntityResult {
   coloredCells: "row" | "column";
 }
 
-export const prepareSolutionData = (data: SolutionStructureType) => {
-  console.log(data?.entityGroups)
+type ScoreExplanationLookup = Map<
+  string,
+  NonNullable<EntityInstanceFrontendType["scoreExplanation"]>
+>;
 
-  // Check how many entities we have
-  if (!data?.entityGroups || data?.entityGroups.length === 0) return null;
+export const prepareSolutionData = (
+  data: SolutionStructureType,
+  scoreByLabel: ScoreExplanationLookup = new Map(),
+) => {
+  if (!data?.entityGroups || data.entityGroups.length === 0) {
+    return null;
+  }
 
-  return groupAllEntityGroups(data.entityGroups)
+  console.log("scoreByLabel", scoreByLabel)
+
+  return groupAllEntityGroups(data.entityGroups, scoreByLabel);
+};
+
+type EntityLookup = {
+  byId: Map<string, EntityInstanceFrontendType>;
+  byLabel: Map<string, EntityInstanceFrontendType>;
+};
+export const buildEntityLookup = (
+  entityGroups: EntityGroupType[],
+  scoreByLabel: ScoreExplanationLookup,
+): EntityLookup => {
+  const byId = new Map<string, EntityInstanceFrontendType>();
+  const byLabel = new Map<string, EntityInstanceFrontendType>();
+
+  for (const group of entityGroups) {
+    for (const entity of group.entities ?? []) {
+      const frontendEntity: EntityInstanceFrontendType = {
+        ...entity,
+        scoreExplanation: scoreByLabel.get(entity.label) ?? [],
+      };
+
+      byLabel.set(frontendEntity.label, frontendEntity);
+
+      if (frontendEntity.id) {
+        byId.set(frontendEntity.id, frontendEntity);
+      }
+    }
+  }
+
+  return { byId, byLabel };
+};
+
+function resolvePlanningEntity(
+  value: unknown,
+  sourceEntity: EntityInstanceType,
+  planningVariableName: string,
+  lookup: { byId: Map<string, EntityInstanceFrontendType>; byLabel: Map<string, EntityInstanceFrontendType> },
+): EntityInstanceFrontendType {
+  const key = String(value);
+
+  const fromLookup =
+    lookup.byId.get(key) ??
+    lookup.byLabel.get(key);
+
+  if (fromLookup) {
+    return {
+      ...fromLookup,
+      scoreExplanation: [],
+    };
+  }
+
+  const nestedPlanningEntities = Array.isArray(sourceEntity.details?.[planningVariableName])
+    ? sourceEntity.details[planningVariableName]
+    : [];
+
+  const matchedNestedEntity = nestedPlanningEntities.find((item) => {
+    if (!item || typeof item !== "object") return false;
+
+    const candidate = item as { id?: unknown; label?: unknown };
+    return String(candidate.id ?? "") === key || String(candidate.label ?? "") === key;
+  });
+
+  if (matchedNestedEntity && typeof matchedNestedEntity === "object") {
+    const nestedEntity = matchedNestedEntity as {
+      id?: string | null;
+      label?: string;
+      details?: Record<string, unknown> | null;
+    };
+    return {
+      id: nestedEntity.id ?? null,
+      label: nestedEntity.label ?? key,
+      planningVariables: {},
+      details: nestedEntity.details ?? null,
+      scoreExplanation: [],
+    };
+  }
+
+  return {
+    label: key,
+    planningVariables: {},
+    details: null,
+    scoreExplanation: [],
+  };
 }
 
 export function groupAllEntityGroups(
-  entityGroups: EntityGroupType[]
+  entityGroups: EntityGroupType[],
+  scoreByLabel: ScoreExplanationLookup,
 ): GroupedEntityResult[] {
   const results: GroupedEntityResult[] = [];
+  const entityLookup = buildEntityLookup(entityGroups, scoreByLabel);
 
   for (const entityGroup of entityGroups) {
-    const groupedResult = groupEntitiesByPlanningVariable(entityGroup);
-
+    const groupedResult = groupEntitiesByPlanningVariable(entityGroup, entityLookup, scoreByLabel);
 
     if (!groupedResult) {
       // TODO: Handle unsupported entity groups in UI
@@ -56,7 +159,9 @@ export function groupAllEntityGroups(
  * - array planning variable values
  */
 export function groupEntitiesByPlanningVariable(
-  entityGroup: EntityGroupType
+  entityGroup: EntityGroupType,
+  entityLookup: { byId: Map<string, EntityInstanceFrontendType>; byLabel: Map<string, EntityInstanceFrontendType> },
+  scoreByLabel: ScoreExplanationLookup,
 ): GroupedEntityResult | null {
   if (!entityGroup.entities || entityGroup.entities.length === 0) {
     return null;
@@ -77,7 +182,7 @@ export function groupEntitiesByPlanningVariable(
 
   const [planningVariableName, firstValue] = firstEntries[0];
 
-  // ARRAY MODE LIKE IN (VRP)
+  // ARRAY MODE LIKE VRP
   if (Array.isArray(firstValue)) {
     const buckets: GroupedEntityBucket[] = [];
 
@@ -97,22 +202,28 @@ export function groupEntitiesByPlanningVariable(
       }
 
       buckets.push({
-        groupValue: entity.label, // Vehicle
-        labels: value.map((v) => String(v)), // Visits
+        groupValue: entity.label,
+        rowEntity: {
+          ...entity,
+          scoreExplanation: scoreByLabel.get(entity.label) ?? [],
+        },
+        entities: value.map((v) =>
+          resolvePlanningEntity(v, entity, planningVariableName, entityLookup)
+        ),
       });
     }
 
     return {
       tabName: entityGroup.entityClass,
-      entityClass: planningVariableName,
-      planningVariableName: entityGroup.entityClass,
+      entityClass: entityGroup.entityClass,
+      planningVariableName: planningVariableName,
       buckets,
       coloredCells: "row",
     };
   }
 
   // GROUPED MODE
-  const bucketsMap = new Map<string, string[]>();
+  const bucketsMap = new Map<string, EntityInstanceFrontendType[]>();
 
   for (const entity of entityGroup.entities) {
     const entries = Object.entries(entity.planningVariables ?? {});
@@ -130,7 +241,6 @@ export function groupEntitiesByPlanningVariable(
     }
 
     if (Array.isArray(currentValue)) {
-      // should not happen here
       // TODO: mixed modes
       return null;
     }
@@ -141,13 +251,17 @@ export function groupEntitiesByPlanningVariable(
       bucketsMap.set(groupValue, []);
     }
 
-    bucketsMap.get(groupValue)!.push(entity.label);
+    bucketsMap.get(groupValue)!.push({
+      ...entity,
+      scoreExplanation: scoreByLabel.get(entity.label) ?? [],
+    });
   }
 
   const buckets: GroupedEntityBucket[] = Array.from(bucketsMap.entries()).map(
-    ([groupValue, labels]) => ({
+    ([groupValue, entities]) => ({
       groupValue,
-      labels,
+      entities,
+      rowEntity: null,
     })
   );
 
@@ -161,7 +275,7 @@ export function groupEntitiesByPlanningVariable(
   return {
     tabName: entityGroup.entityClass,
     entityClass: entityGroup.entityClass,
-    planningVariableName,
+    planningVariableName: planningVariableName,
     buckets,
     coloredCells: "column",
   };
