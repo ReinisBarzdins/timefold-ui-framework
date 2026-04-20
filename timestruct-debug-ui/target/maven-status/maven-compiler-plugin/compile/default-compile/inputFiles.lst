@@ -1,0 +1,15 @@
+/Users/reinisbarzdins/timefold-ui-framework/timestruct-debug-ui/src/main/java/com/timestruct/api/TimefoldSolutionAccess.java
+/Users/reinisbarzdins/timefold-ui-framework/timestruct-debug-ui/src/main/java/com/timestruct/controller/TimefoldToolController.java
+/Users/reinisbarzdins/timefold-ui-framework/timestruct-debug-ui/src/main/java/com/timestruct/controller/TimestructUiController.java
+/Users/reinisbarzdins/timefold-ui-framework/timestruct-debug-ui/src/main/java/com/timestruct/dto/ConstraintDTO.java
+/Users/reinisbarzdins/timefold-ui-framework/timestruct-debug-ui/src/main/java/com/timestruct/dto/EntityGroupDTO.java
+/Users/reinisbarzdins/timefold-ui-framework/timestruct-debug-ui/src/main/java/com/timestruct/dto/EntityInstanceDTO.java
+/Users/reinisbarzdins/timefold-ui-framework/timestruct-debug-ui/src/main/java/com/timestruct/dto/IndictmentDTO.java
+/Users/reinisbarzdins/timefold-ui-framework/timestruct-debug-ui/src/main/java/com/timestruct/dto/MatchDTO.java
+/Users/reinisbarzdins/timefold-ui-framework/timestruct-debug-ui/src/main/java/com/timestruct/dto/ScoreExplanationDTO.java
+/Users/reinisbarzdins/timefold-ui-framework/timestruct-debug-ui/src/main/java/com/timestruct/dto/SolutionStructureDTO.java
+/Users/reinisbarzdins/timefold-ui-framework/timestruct-debug-ui/src/main/java/com/timestruct/helpers/AnnotatedCollectionResult.java
+/Users/reinisbarzdins/timefold-ui-framework/timestruct-debug-ui/src/main/java/com/timestruct/helpers/TimefoldAnnotationHelper.java
+/Users/reinisbarzdins/timefold-ui-framework/timestruct-debug-ui/src/main/java/com/timestruct/mapper/ScoreExplanationMapper.java
+/Users/reinisbarzdins/timefold-ui-framework/timestruct-debug-ui/src/main/java/com/timestruct/service/ScoreExplanationService.java
+/Users/reinisbarzdins/timefold-ui-framework/timestruct-debug-ui/src/main/java/com/timestruct/service/SolutionStructureService.java

@@ -38,8 +38,6 @@ export const prepareSolutionData = (
     return null;
   }
 
-  console.log("scoreByLabel", scoreByLabel)
-
   return groupAllEntityGroups(data.entityGroups, scoreByLabel);
 };
 

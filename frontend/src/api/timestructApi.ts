@@ -13,7 +13,7 @@ async function fetchJson<T>(url: string): Promise<T> {
 }
 
 export function fetchJobList(): Promise<string[]> {
-  return fetchJson<string[]>("/timestruct");
+  return fetchJson<string[]>("/timestruct/jobs");
 }
 
 export function fetchSolutionStructure(jobId: string): Promise<SolutionStructureType> {

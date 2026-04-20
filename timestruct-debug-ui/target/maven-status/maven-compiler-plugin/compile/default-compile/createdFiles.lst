@@ -1,0 +1,15 @@
+com/timestruct/dto/SolutionStructureDTO.class
+com/timestruct/dto/EntityGroupDTO.class
+com/timestruct/dto/MatchDTO.class
+com/timestruct/dto/IndictmentDTO.class
+com/timestruct/dto/ScoreExplanationDTO.class
+com/timestruct/controller/TimefoldToolController.class
+com/timestruct/helpers/TimefoldAnnotationHelper.class
+com/timestruct/service/SolutionStructureService.class
+com/timestruct/dto/EntityInstanceDTO.class
+com/timestruct/service/ScoreExplanationService.class
+com/timestruct/dto/ConstraintDTO.class
+com/timestruct/api/TimefoldSolutionAccess.class
+com/timestruct/controller/TimestructUiController.class
+com/timestruct/helpers/AnnotatedCollectionResult.class
+com/timestruct/mapper/ScoreExplanationMapper.class
