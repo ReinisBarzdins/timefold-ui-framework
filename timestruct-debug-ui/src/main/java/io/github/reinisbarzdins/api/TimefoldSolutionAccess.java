@@ -1,4 +1,4 @@
-package com.timestruct.api;
+package io.github.reinisbarzdins.api;
 
 import java.util.Collection;
 

@@ -1,15 +1,15 @@
-package com.timestruct.service;
+package io.github.reinisbarzdins.service;
 
 import ai.timefold.solver.core.api.domain.lookup.PlanningId;
 import ai.timefold.solver.core.api.domain.solution.PlanningEntityCollectionProperty;
 import ai.timefold.solver.core.api.domain.solution.ProblemFactCollectionProperty;
 import ai.timefold.solver.core.api.domain.variable.PlanningListVariable;
 import ai.timefold.solver.core.api.domain.variable.PlanningVariable;
-import com.timestruct.dto.EntityGroupDTO;
-import com.timestruct.dto.EntityInstanceDTO;
-import com.timestruct.dto.SolutionStructureDTO;
-import com.timestruct.helpers.AnnotatedCollectionResult;
-import com.timestruct.helpers.TimefoldAnnotationHelper;
+import io.github.reinisbarzdins.dto.EntityGroupDTO;
+import io.github.reinisbarzdins.dto.EntityInstanceDTO;
+import io.github.reinisbarzdins.dto.SolutionStructureDTO;
+import io.github.reinisbarzdins.helpers.AnnotatedCollectionResult;
+import io.github.reinisbarzdins.helpers.TimefoldAnnotationHelper;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;

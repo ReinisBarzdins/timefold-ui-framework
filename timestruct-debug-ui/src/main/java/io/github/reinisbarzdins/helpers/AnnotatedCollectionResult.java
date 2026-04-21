@@ -1,4 +1,4 @@
-package com.timestruct.helpers;
+package io.github.reinisbarzdins.helpers;
 
 import java.lang.reflect.Field;
 import java.util.Collection;

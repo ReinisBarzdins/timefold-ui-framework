@@ -1,10 +1,10 @@
-package com.timestruct.mapper;
+package io.github.reinisbarzdins.mapper;
 
 import ai.timefold.solver.core.api.score.ScoreExplanation;
-import com.timestruct.dto.ConstraintDTO;
-import com.timestruct.dto.IndictmentDTO;
-import com.timestruct.dto.MatchDTO;
-import com.timestruct.dto.ScoreExplanationDTO;
+import io.github.reinisbarzdins.dto.ConstraintDTO;
+import io.github.reinisbarzdins.dto.IndictmentDTO;
+import io.github.reinisbarzdins.dto.MatchDTO;
+import io.github.reinisbarzdins.dto.ScoreExplanationDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

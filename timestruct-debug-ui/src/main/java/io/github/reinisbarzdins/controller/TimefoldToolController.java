@@ -1,10 +1,10 @@
-package com.timestruct.controller;
+package io.github.reinisbarzdins.controller;
 
-import com.timestruct.api.TimefoldSolutionAccess;
-import com.timestruct.dto.ScoreExplanationDTO;
-import com.timestruct.dto.SolutionStructureDTO;
-import com.timestruct.service.ScoreExplanationService;
-import com.timestruct.service.SolutionStructureService;
+import io.github.reinisbarzdins.api.TimefoldSolutionAccess;
+import io.github.reinisbarzdins.dto.ScoreExplanationDTO;
+import io.github.reinisbarzdins.dto.SolutionStructureDTO;
+import io.github.reinisbarzdins.service.ScoreExplanationService;
+import io.github.reinisbarzdins.service.SolutionStructureService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;

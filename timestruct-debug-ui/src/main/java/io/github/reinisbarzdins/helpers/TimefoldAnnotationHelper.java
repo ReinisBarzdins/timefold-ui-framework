@@ -1,4 +1,4 @@
-package com.timestruct.helpers;
+package io.github.reinisbarzdins.helpers;
 
 import org.springframework.stereotype.Component;
 

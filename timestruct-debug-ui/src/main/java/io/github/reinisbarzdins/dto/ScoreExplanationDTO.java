@@ -1,4 +1,4 @@
-package com.timestruct.dto;
+package io.github.reinisbarzdins.dto;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,9 +1,9 @@
-package com.timestruct.service;
+package io.github.reinisbarzdins.service;
 
 import ai.timefold.solver.core.api.score.ScoreExplanation;
 import ai.timefold.solver.core.api.solver.SolutionManager;
-import com.timestruct.dto.ScoreExplanationDTO;
-import com.timestruct.mapper.ScoreExplanationMapper;
+import io.github.reinisbarzdins.dto.ScoreExplanationDTO;
+import io.github.reinisbarzdins.mapper.ScoreExplanationMapper;
 import org.springframework.stereotype.Service;
 
 @Service
