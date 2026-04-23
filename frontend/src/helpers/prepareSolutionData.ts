@@ -97,6 +97,7 @@ function resolvePlanningEntity(
     if (!item || typeof item !== "object") return false;
 
     const candidate = item as { id?: unknown; label?: unknown };
+
     return String(candidate.id ?? "") === key || String(candidate.label ?? "") === key;
   });
 
@@ -106,6 +107,7 @@ function resolvePlanningEntity(
       label?: string;
       details?: Record<string, unknown> | null;
     };
+
     return {
       id: nestedEntity.id ?? null,
       label: nestedEntity.label ?? key,
@@ -134,7 +136,6 @@ export function groupAllEntityGroups(
     const groupedResult = groupEntitiesByPlanningVariable(entityGroup, entityLookup, scoreByLabel);
 
     if (!groupedResult) {
-      // TODO: Handle unsupported entity groups in UI
       continue;
     }
 
@@ -144,18 +145,6 @@ export function groupAllEntityGroups(
   return results;
 }
 
-/**
- * Groups entities by their single non-array planning variable.
- *
- * Supported:
- * - exactly 1 planning variable
- * - value is primitive-ish or null
- *
- * Not yet supported:
- * - 0 planning variables
- * - more than 1 planning variable
- * - array planning variable values
- */
 export function groupEntitiesByPlanningVariable(
   entityGroup: EntityGroupType,
   entityLookup: { byId: Map<string, EntityInstanceFrontendType>; byLabel: Map<string, EntityInstanceFrontendType> },
@@ -169,12 +158,10 @@ export function groupEntitiesByPlanningVariable(
   const firstEntries = Object.entries(firstEntity.planningVariables ?? {});
 
   if (firstEntries.length === 0) {
-    // TODO: Handle entities without planning variables
     return null;
   }
 
   if (firstEntries.length > 1) {
-    // TODO: Handle multiple planning variables
     return null;
   }
 
@@ -188,14 +175,12 @@ export function groupEntitiesByPlanningVariable(
       const entries = Object.entries(entity.planningVariables ?? {});
 
       if (entries.length !== 1) {
-        // TODO: inconsistent structure
         return null;
       }
 
       const [_, value] = entries[0];
 
       if (!Array.isArray(value)) {
-        // TODO: mixed array/non-array case
         return null;
       }
 
@@ -227,19 +212,16 @@ export function groupEntitiesByPlanningVariable(
     const entries = Object.entries(entity.planningVariables ?? {});
 
     if (entries.length !== 1) {
-      // TODO: Handle inconsistencies
       return null;
     }
 
     const [currentName, currentValue] = entries[0];
 
     if (currentName !== planningVariableName) {
-      // TODO: inconsistent variable names
       return null;
     }
 
     if (Array.isArray(currentValue)) {
-      // TODO: mixed modes
       return null;
     }
 

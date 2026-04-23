@@ -1,7 +1,7 @@
 import type { FC } from "react";
+import type { EntityInstanceFrontendType } from "../helpers/prepareSolutionData.ts";
 
 import styles from "./CellInfo.module.scss";
-import type { EntityInstanceFrontendType } from "../helpers/prepareSolutionData.ts";
 
 const renderValue = (value: unknown) => {
   if (Array.isArray(value)) {
@@ -43,7 +43,6 @@ type CellInfoProps = {
   hiddenDetailKey?: string;
 };
 
-
 export const CellInfo: FC<CellInfoProps> = ({ entity, hiddenDetailKey }) => {
   if (!entity) {
     return null;
@@ -60,7 +59,6 @@ export const CellInfo: FC<CellInfoProps> = ({ entity, hiddenDetailKey }) => {
         <div className={styles.header}>
           <h3 className={styles.title}>{entity.label}</h3>
         </div>
-
         <div className={styles.content}>
           <div className={styles.section}>
             <h4 className={styles.sectionTitle}>Score explanation</h4>
@@ -82,10 +80,8 @@ export const CellInfo: FC<CellInfoProps> = ({ entity, hiddenDetailKey }) => {
               </div>
             )}
           </div>
-
           <div className={styles.section}>
             <h4 className={styles.sectionTitle}>Entity information</h4>
-
             {detailsEntries.length === 0 ? (
               <div className={styles.empty}>No entity details</div>
             ) : (

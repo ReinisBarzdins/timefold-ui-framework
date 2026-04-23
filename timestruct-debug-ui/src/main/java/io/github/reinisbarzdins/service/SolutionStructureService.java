@@ -17,22 +17,22 @@ import java.util.*;
 
 @Service
 public class SolutionStructureService {
+    private final TimefoldAnnotationHelper timefoldAnnotationHelper;
 
-    private final TimefoldAnnotationHelper helper;
-
-    public SolutionStructureService(TimefoldAnnotationHelper helper) {
-        this.helper = helper;
+    public SolutionStructureService(TimefoldAnnotationHelper timefoldAnnotationHelper) {
+        this.timefoldAnnotationHelper = timefoldAnnotationHelper;
     }
 
     public SolutionStructureDTO buildSolutionStructure(Object solution, Object solverStatus) {
-        List<AnnotatedCollectionResult> entityCollections = helper.findAnnotatedCollections(solution, PlanningEntityCollectionProperty.class);
-        List<AnnotatedCollectionResult> factCollections = helper.findAnnotatedCollections(solution, ProblemFactCollectionProperty.class);
+        List<AnnotatedCollectionResult> entityCollections = timefoldAnnotationHelper.findAnnotatedCollections(solution, PlanningEntityCollectionProperty.class);
+        List<AnnotatedCollectionResult> factCollections = timefoldAnnotationHelper.findAnnotatedCollections(solution, ProblemFactCollectionProperty.class);
 
         SolutionStructureDTO dto = new SolutionStructureDTO();
         dto.setSolutionClass(solution.getClass().getSimpleName());
         dto.setEntityGroups(mapCollectionsToGroups(entityCollections));
         dto.setProblemFactGroups(mapCollectionsToGroups(factCollections));
         dto.setSolverStatus(resolveSolverStatus(solution, solverStatus));
+
         return dto;
     }
 
@@ -117,6 +117,7 @@ public class SolutionStructureService {
 
                 if (field.isAnnotationPresent(PlanningId.class)) {
                     Object value = field.get(entity);
+
                     return value != null ? String.valueOf(value) : null;
                 }
             } catch (IllegalAccessException e) {
@@ -132,6 +133,7 @@ public class SolutionStructureService {
 
                 if ("id".equalsIgnoreCase(field.getName())) {
                     Object value = field.get(entity);
+                    
                     return value != null ? String.valueOf(value) : null;
                 }
             } catch (IllegalAccessException e) {

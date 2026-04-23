@@ -17,13 +17,13 @@ public class ScoreExplanationMapper {
         List<ConstraintDTO> constraints = new ArrayList<>();
         List<IndictmentDTO> indictments = new ArrayList<>();
 
-        explanation.getConstraintMatchTotalMap().forEach((k, v) -> {
+        explanation.getConstraintMatchTotalMap().forEach((name, constraintMatchTotal) -> {
             ConstraintDTO constraint = new ConstraintDTO();
-            constraint.setName(k);
-            constraint.setImpactTotal(v.getScore().toString());
-            constraint.setMatchCount(v.getConstraintMatchSet().size());
+            constraint.setName(name);
+            constraint.setImpactTotal(constraintMatchTotal.getScore().toString());
+            constraint.setMatchCount(constraintMatchTotal.getConstraintMatchSet().size());
 
-            List<MatchDTO> sampleMatches = v.getConstraintMatchSet()
+            List<MatchDTO> sampleMatches = constraintMatchTotal.getConstraintMatchSet()
                     .stream()
                     .map(match -> {
                         MatchDTO matchDto = new MatchDTO();

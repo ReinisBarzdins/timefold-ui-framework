@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { prepareScoreSummary } from "../helpers/prepareScoreSummary.ts";
-
 import type { ScoreExplanationType } from "../types/ScoreExplanationType.ts";
+
 import styles from "./ScoreExplanation.module.scss";
 
 type ScoreSummaryProps = {
@@ -50,15 +50,12 @@ export const ScoreExplanation = ({ score }: ScoreSummaryProps) => {
       >
         Score: {formattedTotalScore}
       </button>
-
       {isOpen && (
         <div className={styles.popup}>
           <h3 className={styles.title}>Score explanation</h3>
-
           <div className={styles.total}>
             Total: {formattedTotalScore}
           </div>
-
           {activeConstraints.length === 0 ? (
             <div className={styles.empty}>No active constraints</div>
           ) : (

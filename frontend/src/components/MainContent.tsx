@@ -4,11 +4,11 @@ import { useSolutionStructure } from "../queries/getSolutionStructure.ts";
 import { prepareSolutionData } from "../helpers/prepareSolutionData.ts";
 import { SolutionTable } from "./SolutionTable.tsx";
 import { prepareScoreData } from "../helpers/prepareScoreData.ts";
-
-import styles from "./MainContent.module.scss";
 import { ScoreExplanation } from "./ScoreExplanation.tsx";
 import { prepareProblemFacts } from "../helpers/prepareProblemFacts.ts";
 import { ProblemFacts } from "./ProblemFacts.tsx";
+
+import styles from "./MainContent.module.scss";
 
 type MainContent = {
   selectedJobId: string;
@@ -30,6 +30,7 @@ export const MainContent: FC<MainContent> = ({
   const { data: solverWithPolling } = useSolutionStructure(selectedJobId, {
     refetchInterval: isSolvingActive ? 5000 : false,
   });
+  
   const toggleTab = (index: number) => {
     setOpenTabIndexes((prev) => {
       const next = new Set(prev);

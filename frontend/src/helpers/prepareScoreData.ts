@@ -19,7 +19,6 @@ const parseImpact = (impact: string): Omit<ScoreExplanationFrontendType, "explan
   };
 };
 
-
 export const prepareScoreData = (
   score: ScoreExplanationType | undefined
 ): Map<string, ScoreExplanationFrontendType[]> => {
@@ -32,8 +31,8 @@ export const prepareScoreData = (
   for (const constraint of score.constraints ?? []) {
     for (const match of constraint.sampleMatches ?? []) {
       const parsedImpact = parseImpact(match.impact);
-
       const scoreNoViolation = parsedImpact.hard === 0 && parsedImpact.medium === 0 && parsedImpact.soft === 0;
+
       const scoreExplanation: ScoreExplanationFrontendType = {
         ...parsedImpact,
         explanation: scoreNoViolation ? null : constraint.name,
@@ -41,7 +40,6 @@ export const prepareScoreData = (
 
       for (const objectLabel of match.objects ?? []) {
         const existing = lookup.get(objectLabel) ?? [];
-
         lookup.set(objectLabel, [...existing, scoreExplanation]);
       }
     }

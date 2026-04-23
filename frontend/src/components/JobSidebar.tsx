@@ -1,4 +1,5 @@
 import { type FC } from "react";
+import classNames from "classnames";
 
 import styles from "./JobSidebar.module.scss";
 
@@ -44,9 +45,10 @@ export const JobSidebar: FC<JobSidebarProps> = ({
             <button
               key={jobId}
               onClick={() => onSelectJob(jobId)}
-              className={`${styles.jobButton} ${
-                isSelected ? styles.jobButtonSelected : ""
-              }`}
+              className={classNames(
+                styles.jobButton,
+                { [styles.jobButtonSelected]: isSelected }
+              )}
             >
               <span className={styles.jobId}>{jobId}</span>
             </button>

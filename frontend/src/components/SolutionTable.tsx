@@ -2,9 +2,9 @@ import { type FC, type MouseEvent, useState } from "react";
 import { type GroupedEntityBucket, type GroupedEntityResult } from "../helpers/prepareSolutionData.ts";
 import type { EntityInstanceType } from "../types/EntityInstanceType.ts";
 import { CellInfo } from "./CellInfo.tsx";
+import classNames from "classnames";
 
 import styles from "./SolutionTable.module.scss";
-import classNames from "classnames";
 
 type Severity = "none" | "hard" | "medium" | "soft";
 
@@ -47,7 +47,11 @@ export const SolutionTable: FC<TableProps> = ({
 
   const [openCellKeys, setOpenCellKeys] = useState<Set<string>>(new Set());
   const [popupPlacements, setPopupPlacements] = useState<
-    Record<string, { vertical: "above" | "below"; horizontal: "left" | "right" | "center" }>
+    Record<string,
+      {
+        vertical: "above" | "below";
+        horizontal: "left" | "right" | "center"
+      }>
   >({});
 
   const toggleCell = (cellKey: string, wrapperElement?: HTMLDivElement | null) => {
@@ -159,7 +163,6 @@ export const SolutionTable: FC<TableProps> = ({
                         {bucket.groupValue}
                       </span>
                     </div>
-
                     {coloredCells === "row" && isRowOpen && bucket.rowEntity && (
                       <div
                         className={classNames(styles.popup, {
@@ -177,7 +180,6 @@ export const SolutionTable: FC<TableProps> = ({
                 </th>
               );
             })()}
-
               {Array.from({ length: maxEntityColumns }).map((_, index) => (
                 <td key={index}>
                   {(() => {
@@ -197,6 +199,7 @@ export const SolutionTable: FC<TableProps> = ({
                   const cellKey = entity
                     ? buildCellKey(bucket.groupValue, entity, index)
                     : null;
+
                   const isOpen = cellKey ? openCellKeys.has(cellKey) : false;
 
                   return (
@@ -222,7 +225,6 @@ export const SolutionTable: FC<TableProps> = ({
                           {cellValue ?? null}
                         </span>
                       </div>
-
                       {isOpen && entity && entity.details && (
                         <div
                           className={classNames(styles.popup, {

@@ -1,5 +1,5 @@
-import { useJobList } from "../queries/getJobList.ts";
 import { useState } from "react";
+import { useJobList } from "../queries/getJobList.ts";
 import { JobSidebar } from "../components/JobSidebar.tsx";
 import { MainContent } from "../components/MainContent.tsx";
 
@@ -7,7 +7,6 @@ const Timestruct = () => {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
 
   const { data, isLoading, error } = useJobList();
-
 
   return (
     <div style={{ display: "flex" }}>

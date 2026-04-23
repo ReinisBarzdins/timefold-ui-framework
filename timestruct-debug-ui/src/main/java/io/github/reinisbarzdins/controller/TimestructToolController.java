@@ -16,14 +16,13 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.Collection;
 
 @RestController
-@RequestMapping("/timestruct")
-public class TimefoldToolController {
-
+@RequestMapping("${timestruct.api-prefix:/timestruct}")
+public class TimestructToolController {
     private final TimefoldSolutionAccess solutionAccess;
     private final ScoreExplanationService scoreExplanationService;
     private final SolutionStructureService solutionStructureService;
 
-    public TimefoldToolController(
+    public TimestructToolController(
             TimefoldSolutionAccess solutionAccess,
             ScoreExplanationService scoreExplanationService,
             SolutionStructureService solutionStructureService

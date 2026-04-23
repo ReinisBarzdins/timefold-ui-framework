@@ -1,7 +1,7 @@
 import { type FC, useState } from "react";
-import styles from "./ProblemFacts.module.scss";
 import type { PreparedProblemFactGroupType } from "../helpers/prepareProblemFacts.ts";
 
+import styles from "./ProblemFacts.module.scss";
 
 const renderRelatedValue = (item: unknown): string => {
   if (item === null || item === undefined) {
@@ -59,7 +59,6 @@ type ProblemFactsProps = {
   problemFactGroups?: PreparedProblemFactGroupType[];
 };
 
-
 export const ProblemFacts: FC<ProblemFactsProps> = ({ problemFactGroups }) => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
@@ -97,7 +96,6 @@ export const ProblemFacts: FC<ProblemFactsProps> = ({ problemFactGroups }) => {
           return (
             <div key={group.factClass} className={styles.groupSection}>
               <h4 className={styles.groupTitle}>{group.factClass}</h4>
-
               <div className={styles.factList}>
                 {group.facts.length === 0 ? (
                   <div className={styles.emptyState}>
