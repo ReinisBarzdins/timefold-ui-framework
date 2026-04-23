@@ -1,26 +1,12 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+/backend/target/*
+# IntelliJ
+.idea/
+*.iml
+.ai/
 
-node_modules
-dist
-dist-ssr
-*.local
+# Node (frontend)
+node_modules/
+dist/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-timefold-quickstarts-stable
+# Maven
+timestruct-debug-ui/target/

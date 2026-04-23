@@ -1,0 +1,120 @@
+.tableWrapper {
+  padding: 16px;
+}
+
+.item {
+  margin: 8px 8px;
+  color: #242424;
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  min-width: 70px;
+  min-height: 36px;
+}
+
+.rowItem .itemText {
+  padding: 0 8px;
+  font-weight: 700;
+}
+
+.itemText {
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.itemSmall {
+  padding: 12px 20px;
+}
+
+.itemSmall .itemText {
+  font-size: 12px;
+}
+
+.itemXSmall {
+  padding: 8px 8px;
+}
+
+.itemXSmall .itemText {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.itemHard {
+  background-color: #fecaca;
+  cursor: pointer;
+}
+
+.itemMedium {
+  background-color: #fed7aa;
+  cursor: pointer;
+}
+
+.itemSoft {
+  background-color: #fef08a;
+  cursor: pointer;
+}
+
+.itemNone {
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.cellWrapper {
+  position: relative;
+}
+
+.popup {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+}
+
+.popupBelow {
+  top: calc(100% + 8px);
+  bottom: auto;
+}
+
+.popupAbove {
+  bottom: calc(100% + 8px);
+  top: auto;
+}
+
+.popupCenter {
+  left: 0;
+  right: auto;
+}
+
+.popupRight {
+  right: 0;
+  left: auto;
+}
+
+.popupLeft {
+  left: 0;
+  right: auto;
+}
+
+.borderRight {
+  border-right: 1px solid #ffffff;
+}
+
+.borderBottom {
+  border-bottom: 1px solid #ffffff;
+}
+
+.isRowItem {
+  color: #1a1a1a;
+  min-width: 70px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 8px;
+  border-radius: 6px;
+}

@@ -1,0 +1,123 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.buttonList {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.groupButton {
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #1a1a1a;
+  font-weight: 400;
+}
+
+.groups {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.groupSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.groupTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.factList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.factCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+  background: #ffffff;
+  color: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 140px;
+}
+
+.factFields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.factHeader {
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.factHeaderText {
+  font-size: 14px;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.factFieldsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.emptyState {
+  border: 1px dashed #4b5563;
+  border-radius: 12px;
+  padding: 16px;
+  color: #d1d5db;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.emptyFactDetails {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.factField {
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 2px 4px;
+  border-radius: 8px;
+}
+
+.fieldLabel {
+  font-weight: 700;
+}
+
+.fieldValue {
+  word-break: break-word;
+  color: #374151;
+}
