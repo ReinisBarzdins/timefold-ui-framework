@@ -1,12 +1,13 @@
-/backend/target/*
-# IntelliJ
+# Maven
+target/
+
+# IDE
 .idea/
 *.iml
+
+# AI
 .ai/
 
-# Node (frontend)
-node_modules/
-dist/
-
-# Maven
-timestruct-debug-ui/target/
+# Frontend
+frontend/node_modules/
+frontend/dist/
