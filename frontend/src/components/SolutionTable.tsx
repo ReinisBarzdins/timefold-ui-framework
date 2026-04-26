@@ -6,10 +6,10 @@ import classNames from "classnames";
 
 import styles from "./SolutionTable.module.scss";
 
-type Severity = "none" | "hard" | "medium" | "soft";
+type Severity = "none" | "hard" | "medium" | "soft" | null;
 
 const getSeverityFromImpact = (impact?: string | null): Severity => {
-  if (!impact) return "none";
+  if (!impact) return null;
 
   const hardMatch = impact.match(/(-?\d+)hard/i);
   const mediumMatch = impact.match(/(-?\d+)medium/i);
@@ -41,9 +41,22 @@ export const SolutionTable: FC<TableProps> = ({
   solutionData,
   indictmentByLabel = {},
 }) => {
-  const { entityClass, buckets, planningVariableName, coloredCells } = solutionData;
+  const { entityClass, buckets, planningVariableName, rowLabel, columnLabel } = solutionData;
 
   const maxEntityColumns = calculateMaxEntityCount(buckets);
+
+  const maxCellLabelLength = buckets.reduce((maxLength, bucket) => {
+    const bucketMaxLength = bucket.entities.reduce((entityMaxLength, entity) => {
+      return Math.max(entityMaxLength, entity.label.length);
+    }, 0);
+
+    return Math.max(maxLength, bucketMaxLength);
+  }, 0);
+
+  const itemSizeClass = classNames({
+    [styles.itemSmall]: maxCellLabelLength > 18 && maxCellLabelLength <= 28,
+    [styles.itemXSmall]: maxCellLabelLength > 28,
+  });
 
   const [openCellKeys, setOpenCellKeys] = useState<Set<string>>(new Set());
   const [popupPlacements, setPopupPlacements] = useState<
@@ -113,20 +126,11 @@ export const SolutionTable: FC<TableProps> = ({
       <table style={{ borderSpacing: 0 }}>
         <thead>
           <tr>
-            <th
-              className={classNames(
-              styles.borderBottom,
-              styles.borderRight
-            )}
-          >
-              {entityClass
-              ? entityClass.charAt(0).toUpperCase() + entityClass.slice(1)
-              : ""}
+            <th className={classNames(styles.borderBottom, styles.borderRight)}>
+              {rowLabel.charAt(0).toUpperCase() + rowLabel.slice(1)}
             </th>
             <th colSpan={maxEntityColumns} className={styles.borderBottom}>
-              {planningVariableName
-              ? planningVariableName.charAt(0).toUpperCase() + planningVariableName.slice(1)
-              : ""}
+              {columnLabel.charAt(0).toUpperCase() + columnLabel.slice(1)}
             </th>
           </tr>
         </thead>
@@ -140,20 +144,23 @@ export const SolutionTable: FC<TableProps> = ({
               const isRowOpen = openCellKeys.has(rowKey);
 
               return (
-                <th className={classNames(styles.borderRight)}>
+                <th
+                  className={classNames(styles.borderRight)}
+                  style={{ width: 160, minWidth: 160 }}
+                >
                   <div className={styles.cellWrapper}>
                     <div
                       className={classNames({
-                        [styles.rowItem]: true,
-                        [styles.isRowItem]: coloredCells === "row",
-                        [styles.itemClickable]: coloredCells === "row" && !!bucket.rowEntity,
-                        [styles.itemHard]: coloredCells === "row" && rowSeverity === "hard",
-                        [styles.itemMedium]: coloredCells === "row" && rowSeverity === "medium",
-                        [styles.itemSoft]: coloredCells === "row" && rowSeverity === "soft",
-                        [styles.itemNone]: coloredCells === "row" && rowSeverity === "none",
+                        [styles.item]: true,
+                        [styles.itemRowHeader]: true,
+                        [styles.itemClickable]: !!bucket.rowEntity,
+                        [styles.itemHard]: rowSeverity === "hard",
+                        [styles.itemMedium]: rowSeverity === "medium",
+                        [styles.itemSoft]: rowSeverity === "soft",
+                        [styles.itemNone]: ((rowSeverity === "none") || rowSeverity === null),
                       })}
                       onClick={
-                        coloredCells === "row" && bucket.rowEntity
+                        bucket.rowEntity
                           ? (event: MouseEvent<HTMLDivElement>) =>
                             toggleCell(rowKey, event.currentTarget.parentElement as HTMLDivElement)
                           : undefined
@@ -163,7 +170,7 @@ export const SolutionTable: FC<TableProps> = ({
                         {bucket.groupValue}
                       </span>
                     </div>
-                    {coloredCells === "row" && isRowOpen && bucket.rowEntity && (
+                    {isRowOpen && bucket.rowEntity && (
                       <div
                         className={classNames(styles.popup, {
                           [styles.popupAbove]: getPopupPlacement(rowKey).vertical === "above",
@@ -185,15 +192,7 @@ export const SolutionTable: FC<TableProps> = ({
                   {(() => {
                   const entity = bucket.entities[index];
                   const cellValue = entity?.label;
-                  const cellLength = cellValue?.length ?? 0;
-
-                  const itemSizeClass = classNames({
-                    [styles.itemSmall]: cellLength > 18 && cellLength <= 28,
-                    [styles.itemXSmall]: cellLength > 28,
-                  });
-
-                  const cellImpact = cellValue ? indictmentByLabel[cellValue] : null;
-                  const impact = coloredCells === "column" ? cellImpact : null;
+                  const impact = cellValue ? indictmentByLabel[cellValue] : null;
                   const severity = getSeverityFromImpact(impact);
 
                   const cellKey = entity
@@ -208,10 +207,10 @@ export const SolutionTable: FC<TableProps> = ({
                         className={classNames({
                           [styles.item]: !!cellValue,
                           [itemSizeClass]: !!cellValue,
-                          [styles.itemHard]: !!cellValue && coloredCells === "column" && severity === "hard",
-                          [styles.itemMedium]: !!cellValue && coloredCells === "column" && severity === "medium",
-                          [styles.itemSoft]: !!cellValue && coloredCells === "column" && severity === "soft",
-                          [styles.itemNone]: !!cellValue && ((coloredCells === "column" && severity === "none") || (coloredCells === "row")),
+                          [styles.itemHard]: !!cellValue && severity === "hard",
+                          [styles.itemMedium]: !!cellValue && severity === "medium",
+                          [styles.itemSoft]: !!cellValue && severity === "soft",
+                          [styles.itemNone]: !!cellValue && ((severity === "none") || severity === null),
                           [styles.itemClickable]: !!cellValue,
                         })}
                         onClick={

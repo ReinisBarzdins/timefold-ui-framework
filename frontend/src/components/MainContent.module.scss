@@ -5,8 +5,9 @@
 }
 
 .entitiesContainer {
+  max-width: calc(100vw - 420px);
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
 }
 
@@ -20,10 +21,20 @@
   font-weight: 600;
 }
 
+.entitiesButtons{
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 330px));
+  gap: 16px;
+}
+
 .entitiesButton {
   background-color: #ffffff;
   color: #1a1a1a;
   font-weight: 400;
+}
+
+.entitiesButtonActive{
+  background-color: #b8cdf6;
 }
 
 .scoreContainer {

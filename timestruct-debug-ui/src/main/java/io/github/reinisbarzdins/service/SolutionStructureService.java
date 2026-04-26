@@ -3,8 +3,17 @@ package io.github.reinisbarzdins.service;
 import ai.timefold.solver.core.api.domain.lookup.PlanningId;
 import ai.timefold.solver.core.api.domain.solution.PlanningEntityCollectionProperty;
 import ai.timefold.solver.core.api.domain.solution.ProblemFactCollectionProperty;
+import ai.timefold.solver.core.api.domain.variable.AnchorShadowVariable;
+import ai.timefold.solver.core.api.domain.variable.CascadingUpdateShadowVariable;
+import ai.timefold.solver.core.api.domain.variable.IndexShadowVariable;
+import ai.timefold.solver.core.api.domain.variable.InverseRelationShadowVariable;
+import ai.timefold.solver.core.api.domain.variable.NextElementShadowVariable;
+import ai.timefold.solver.core.api.domain.variable.PiggybackShadowVariable;
 import ai.timefold.solver.core.api.domain.variable.PlanningListVariable;
 import ai.timefold.solver.core.api.domain.variable.PlanningVariable;
+import ai.timefold.solver.core.api.domain.variable.PreviousElementShadowVariable;
+import ai.timefold.solver.core.api.domain.variable.ShadowVariable;
+import ai.timefold.solver.core.api.domain.variable.ShadowVariablesInconsistent;
 import io.github.reinisbarzdins.dto.EntityGroupDTO;
 import io.github.reinisbarzdins.dto.EntityInstanceDTO;
 import io.github.reinisbarzdins.dto.SolutionStructureDTO;
@@ -12,11 +21,27 @@ import io.github.reinisbarzdins.helpers.AnnotatedCollectionResult;
 import io.github.reinisbarzdins.helpers.TimefoldAnnotationHelper;
 import org.springframework.stereotype.Service;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.*;
 
 @Service
 public class SolutionStructureService {
+
+    private static final List<Class<? extends Annotation>> PLANNING_VARIABLE_ANNOTATIONS = List.of(
+            PlanningVariable.class,
+            PlanningListVariable.class,
+            InverseRelationShadowVariable.class,
+            AnchorShadowVariable.class,
+            IndexShadowVariable.class,
+            PreviousElementShadowVariable.class,
+            NextElementShadowVariable.class,
+            ShadowVariable.class,
+            PiggybackShadowVariable.class,
+            CascadingUpdateShadowVariable.class,
+            ShadowVariablesInconsistent.class
+    );
+
     private final TimefoldAnnotationHelper timefoldAnnotationHelper;
 
     public SolutionStructureService(TimefoldAnnotationHelper timefoldAnnotationHelper) {
@@ -72,36 +97,47 @@ public class SolutionStructureService {
             return planningVariables;
         }
 
-        Class<?> sourceClass = entity.getClass();
-
-        for (Field field : sourceClass.getDeclaredFields()) {
+        for (Field field : getAllFields(entity.getClass())) {
             try {
+                if (!hasAnyPlanningAnnotation(field)) {
+                    continue;
+                }
+
                 field.setAccessible(true);
+                Object value = field.get(entity);
 
-                if (field.isAnnotationPresent(PlanningVariable.class)) {
-                    Object value = field.get(entity);
+                if (value instanceof List<?> listValue) {
+                    planningVariables.put(field.getName(),
+                            listValue.stream().map(this::formatObject).toList());
+                } else {
                     planningVariables.put(field.getName(), formatObject(value));
-                } else if (field.isAnnotationPresent(PlanningListVariable.class)) {
-                    Object value = field.get(entity);
-
-                    if (value instanceof List<?> listValue) {
-                        List<String> formattedValues = listValue.stream()
-                                .map(this::formatObject)
-                                .toList();
-
-                        planningVariables.put(field.getName(), formattedValues);
-                    } else {
-                        planningVariables.put(field.getName(), null);
-                    }
                 }
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(
-                        "Failed to access planning variable field: " + field.getName(), e
-                );
+                        "Failed to access planning variable field: " + field.getName(), e);
             }
         }
 
         return planningVariables;
+    }
+
+    private boolean hasAnyPlanningAnnotation(Field field) {
+        for (Class<? extends Annotation> annotationType : PLANNING_VARIABLE_ANNOTATIONS) {
+            if (field.isAnnotationPresent(annotationType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<Field> getAllFields(Class<?> clazz) {
+        List<Field> fields = new ArrayList<>();
+        Class<?> current = clazz;
+        while (current != null && current != Object.class && !isJdkClass(current)) {
+            fields.addAll(Arrays.asList(current.getDeclaredFields()));
+            current = current.getSuperclass();
+        }
+        return fields;
     }
 
     private String extractEntityId(Object entity) {
@@ -109,37 +145,29 @@ public class SolutionStructureService {
             return null;
         }
 
-        Class<?> sourceClass = entity.getClass();
-
-        for (Field field : sourceClass.getDeclaredFields()) {
+        for (Field field : getAllFields(entity.getClass())) {
             try {
                 field.setAccessible(true);
-
                 if (field.isAnnotationPresent(PlanningId.class)) {
                     Object value = field.get(entity);
-
                     return value != null ? String.valueOf(value) : null;
                 }
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(
-                        "Failed to access planning id field: " + field.getName(), e
-                );
+                        "Failed to access planning id field: " + field.getName(), e);
             }
         }
 
-        for (Field field : sourceClass.getDeclaredFields()) {
+        for (Field field : getAllFields(entity.getClass())) {
             try {
                 field.setAccessible(true);
-
                 if ("id".equalsIgnoreCase(field.getName())) {
                     Object value = field.get(entity);
-                    
                     return value != null ? String.valueOf(value) : null;
                 }
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(
-                        "Failed to access id field: " + field.getName(), e
-                );
+                        "Failed to access id field: " + field.getName(), e);
             }
         }
 
@@ -153,9 +181,7 @@ public class SolutionStructureService {
             return details;
         }
 
-        Class<?> sourceClass = entity.getClass();
-
-        for (Field field : sourceClass.getDeclaredFields()) {
+        for (Field field : getAllFields(entity.getClass())) {
             try {
                 field.setAccessible(true);
                 Object value = field.get(entity);
@@ -167,8 +193,7 @@ public class SolutionStructureService {
                 details.put(field.getName(), normalizeDetailValue(value));
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(
-                        "Failed to access detail field: " + field.getName(), e
-                );
+                        "Failed to access detail field: " + field.getName(), e);
             }
         }
 
@@ -194,18 +219,13 @@ public class SolutionStructureService {
 
         if (value instanceof List<?> list) {
             boolean isSimpleList = list.stream().allMatch(item ->
-                    item instanceof String ||
-                            item instanceof Number ||
-                            item instanceof Boolean
-            );
+                    item instanceof String || item instanceof Number || item instanceof Boolean);
 
             if (isSimpleList) {
                 return list;
             }
 
-            return list.stream()
-                    .map(this::normalizeRelatedObject)
-                    .toList();
+            return list.stream().map(this::normalizeRelatedObject).toList();
         }
 
         return formatObject(value);
@@ -234,9 +254,7 @@ public class SolutionStructureService {
             return details;
         }
 
-        Class<?> sourceClass = entity.getClass();
-
-        for (Field field : sourceClass.getDeclaredFields()) {
+        for (Field field : getAllFields(entity.getClass())) {
             try {
                 field.setAccessible(true);
                 Object value = field.get(entity);
@@ -248,8 +266,7 @@ public class SolutionStructureService {
                 details.put(field.getName(), normalizeShallowDetailValue(value));
             } catch (IllegalAccessException e) {
                 throw new RuntimeException(
-                        "Failed to access shallow detail field: " + field.getName(), e
-                );
+                        "Failed to access shallow detail field: " + field.getName(), e);
             }
         }
 
@@ -267,18 +284,13 @@ public class SolutionStructureService {
 
         if (value instanceof Collection<?> collection) {
             boolean isSimpleCollection = collection.stream().allMatch(item ->
-                    item instanceof String ||
-                            item instanceof Number ||
-                            item instanceof Boolean
-            );
+                    item instanceof String || item instanceof Number || item instanceof Boolean);
 
             if (isSimpleCollection) {
                 return new ArrayList<>(collection);
             }
 
-            return collection.stream()
-                    .map(this::formatObject)
-                    .toList();
+            return collection.stream().map(this::formatObject).toList();
         }
 
         return formatObject(value);
@@ -311,27 +323,29 @@ public class SolutionStructureService {
             return null;
         }
 
-        Class<?> currentClass = solution.getClass();
+        for (Field field : getAllFields(solution.getClass())) {
+            try {
+                field.setAccessible(true);
 
-        while (currentClass != null && currentClass != Object.class) {
-            for (Field field : currentClass.getDeclaredFields()) {
-                try {
-                    field.setAccessible(true);
-
-                    if ("solverStatus".equalsIgnoreCase(field.getName())) {
-                        Object value = field.get(solution);
-                        return value != null ? String.valueOf(value) : null;
-                    }
-                } catch (IllegalAccessException e) {
-                    throw new RuntimeException(
-                            "Failed to access solver status field: " + field.getName(), e
-                    );
+                if ("solverStatus".equalsIgnoreCase(field.getName())) {
+                    Object value = field.get(solution);
+                    return value != null ? String.valueOf(value) : null;
                 }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(
+                        "Failed to access solver status field: " + field.getName(), e);
             }
-
-            currentClass = currentClass.getSuperclass();
         }
 
         return null;
+    }
+
+    private boolean isJdkClass(Class<?> clazz) {
+        String packageName = clazz.getPackageName();
+        return packageName.startsWith("java.")
+                || packageName.startsWith("javax.")
+                || packageName.startsWith("sun.")
+                || packageName.startsWith("com.sun.")
+                || packageName.startsWith("jdk.");
     }
 }

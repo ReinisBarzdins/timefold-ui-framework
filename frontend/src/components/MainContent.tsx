@@ -1,4 +1,5 @@
 import { type FC, useState } from "react";
+import classNames from "classnames";
 import { useScoreExplanation } from "../queries/getScoreExplanation.ts";
 import { useSolutionStructure } from "../queries/getSolutionStructure.ts";
 import { prepareSolutionData } from "../helpers/prepareSolutionData.ts";
@@ -17,7 +18,7 @@ type MainContent = {
 export const MainContent: FC<MainContent> = ({
   selectedJobId,
 }) => {
-  const [openTabIndexes, setOpenTabIndexes] = useState<Set<number>>(new Set());
+  const [openTabIndex, setOpenTabIndex] = useState<number | null>(null);
 
   const { data: solver } = useSolutionStructure(selectedJobId);
 
@@ -32,17 +33,7 @@ export const MainContent: FC<MainContent> = ({
   });
   
   const toggleTab = (index: number) => {
-    setOpenTabIndexes((prev) => {
-      const next = new Set(prev);
-
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-
-      return next;
-    });
+    setOpenTabIndex((prev) => (prev === index ? null : index));
   };
 
   if (!solverWithPolling) return null;
@@ -80,13 +71,16 @@ export const MainContent: FC<MainContent> = ({
       </div>
       <div className={styles.entitiesContainer}>
         <div>
-          <span className={styles.title}>Entities: </span>
+          <span className={styles.title}>Tables: </span>
         </div>
-        <div>
+        <div className={styles.entitiesButtons}>
           {tableTabs.map((tab, index) => (
             <button
               key={tab}
-              className={styles.entitiesButton}
+              className={classNames(
+                styles.entitiesButton,
+                openTabIndex === index && styles.entitiesButtonActive
+              )}
               type="button"
               onClick={() => toggleTab(index)}
             >
@@ -97,7 +91,7 @@ export const MainContent: FC<MainContent> = ({
       </div>
       <div>
         {solutionData.map((solution, index) =>
-          openTabIndexes.has(index) ? (
+          openTabIndex === index ? (
             <SolutionTable
               key={solution.tabName}
               solutionData={solution}

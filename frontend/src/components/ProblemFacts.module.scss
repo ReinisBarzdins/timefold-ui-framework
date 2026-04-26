@@ -5,9 +5,10 @@
   width: 100%;
 }
 
-.header {
+.buttonContainer {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .title {
@@ -17,11 +18,9 @@
 }
 
 .buttonList {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-bottom: 16px;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 330px));
+  gap: 16px;
 }
 
 .groupButton {

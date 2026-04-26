@@ -5,6 +5,12 @@ import styles from "./CellInfo.module.scss";
 
 const renderValue = (value: unknown) => {
   if (Array.isArray(value)) {
+    if (typeof value[0] === "object" && value[0] !== null) {
+      return value.map((item) =>
+        typeof item === "object" && item !== null ? item.label : item
+      ).join(", ")
+    }
+
     return value.join(", ");
   }
 
@@ -87,7 +93,7 @@ export const CellInfo: FC<CellInfoProps> = ({ entity, hiddenDetailKey }) => {
             ) : (
               <div className={styles.list}>
                 {detailsEntries.map(([key, value]) => {
-                  if (!value) {
+                  if (value === null || value === undefined) {
                     return null;
                   }
 

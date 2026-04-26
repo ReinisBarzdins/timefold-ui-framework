@@ -72,20 +72,22 @@ export const ProblemFacts: FC<ProblemFactsProps> = ({ problemFactGroups }) => {
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.buttonList}>
+      <div className={styles.buttonContainer}>
         <div>
           <span className={styles.title}>Problem facts: </span>
         </div>
-        {problemFactGroups.map((group, index) => (
-          <button
-            key={group.factClass}
-            type="button"
-            className={styles.groupButton}
-            onClick={() => toggleGroup(index)}
-          >
-            {group.factClass}
-          </button>
-        ))}
+        <div className={styles.buttonList}>
+          {problemFactGroups.map((group, index) => (
+            <button
+              key={group.factClass}
+              type="button"
+              className={styles.groupButton}
+              onClick={() => toggleGroup(index)}
+            >
+              {group.factClass}
+            </button>
+          ))}
+        </div>
       </div>
       <div className={styles.groups}>
         {problemFactGroups.map((group, index) => {
