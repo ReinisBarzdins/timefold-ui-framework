@@ -10,8 +10,16 @@ A debug UI tool for [Timefold](https://timefold.ai/) based Spring Boot applicati
 ## Requirements
 
 - Java 17+
+
 - Spring Boot
+
 - Timefold Solver
+
+⚠️ Important: The latest version of the devtool currently supports:
+
+- Timefold Solver v1.27.0
+
+- Spring Boot v3.5.10
 
 ---
 
@@ -58,51 +66,20 @@ All endpoints will then be available under `/my-custom-prefix/` (e.g. `/my-custo
 
 ## Integration
 
-### 1. Implement `TimefoldSolutionAccess`
-
-The debug UI has no direct access to your solver or your jobs — it doesn't know what planning problem you're solving or how you store your data. `TimefoldSolutionAccess` is the bridge between your application and the debug UI. By implementing this interface, you tell the library how to list your jobs, how to retrieve a solution by `jobId`, and how to check the solver status. Without it, the UI has nothing to display.
-
-Create a `@Component` that implements the interface:
-
-```java
-@Component
-public class MySolutionAccess implements TimefoldSolutionAccess {
-
-    private final JobStore jobStore;
-    private final SolverManager<?, String> solverManager;
-
-    public MySolutionAccess(JobStore jobStore, SolverManager<?, String> solverManager) {
-        this.jobStore = jobStore;
-        this.solverManager = solverManager;
-    }
-
-    @Override
-    public Collection<String> listJobIds() {
-        return jobStore.listJobIds();
-    }
-
-    @Override
-    public Object getSolution(String jobId) {
-        Controller.Job job = jobStore.get(jobId);
-        return job != null ? job.solution() : null;
-    }
-
-    @Override
-    public Object getSolverStatus(String jobId) {
-        return solverManager.getSolverStatus(jobId);
-    }
-}
-```
-
-### 2. Set up a Job and JobStore
+### 1. Set up a Job and JobStore
 
 > ⚠️ **This library requires a job-based architecture.** The debug UI is built around the concept of named jobs — each planning problem submitted to the solver must be stored and tracked by a unique `jobId`. Without this, the UI has no way to list, retrieve, or inspect solver runs.
 
-A **Job** is a record that holds the current solution and any exception that may have occurred during solving:
+The **main controller** must expose the job storage as a public final field so it can be accessed by the devtool solution access layer, for example:
+
+```java
+public final ConcurrentMap<String, Job> jobIdToJob = new ConcurrentHashMap<>();
+```
+
+The Job record, also located inside the main controller, stores the current solution instance and any exception that may have occurred during the solving process. The record must be declared as public so it can be accessed outside the controller:
 
 ```java
 public record Job(MySolution solution, Throwable exception) {
-
     static Job ofSolution(MySolution solution) {
         return new Job(solution, null);
     }
@@ -113,31 +90,7 @@ public record Job(MySolution solution, Throwable exception) {
 }
 ```
 
-A **JobStore** is an in-memory store that maps each `jobId` to its corresponding `Job`. Every time your application starts or updates a solver run, it should store the result in the `JobStore`. The debug UI queries the `JobStore` (via `TimefoldSolutionAccess`) to list all jobs and retrieve their solutions.
-
-```java
-@Component
-public class JobStore {
-
-    private final ConcurrentMap<String, Job> jobs = new ConcurrentHashMap<>();
-
-    public Collection<String> listJobIds() {
-        return jobs.keySet();
-    }
-
-    public Job get(String jobId) {
-        return jobs.get(jobId);
-    }
-
-    public ConcurrentMap<String, Job> getMap() {
-        return jobs;
-    }
-
-    public void put(String jobId, Job job) {
-        jobs.put(jobId, job);
-    }
-}
-```
+Later in the **MySolutionAccess class**, these jobs are exposed and passed to the ui-debug tool, allowing the frontend to access the current solutions, solver statuses, and score analysis information.
 
 The following is one example of how jobs can be stored using `solveBuilder()`. This is not the only way — jobs can be stored in memory, a database, or any other storage mechanism, as long as they are accessible via `TimefoldSolutionAccess`. The only requirement is that each job is identifiable by a unique `jobId`.
 
@@ -172,6 +125,44 @@ The key points are:
 - The debug UI polls the store and always shows the latest available solution for each job
 
 ---
+
+### 2. Implement `TimefoldSolutionAccess`
+
+The debug UI has no direct access to your solver or your jobs — it doesn't know what planning problem you're solving or how you store your data. `TimefoldSolutionAccess` is the bridge between your application and the debug UI. By implementing this interface, you tell the library how to list your jobs, how to retrieve a solution by `jobId`, and how to check the solver status. Without it, the UI has nothing to display.
+
+Create a `@Component` that implements the interface:
+
+```java
+@Component
+public class MySolutionAccess implements TimefoldSolutionAccess {
+    private final Controller controller;
+    private final SolverManager<?, String> solverManager;
+
+    public MySolutionAccess(
+            Controller controller,
+            SolverManager<?, String> solverManager
+    ) {
+        this.controller = controller;
+        this.solverManager = solverManager;
+    }
+
+    @Override
+    public Collection<String> listJobIds() {
+        return controller.jobIdToJob.keySet();
+    }
+
+    @Override
+    public Object getSolution(String jobId) {
+        Controller.Job job = controller.jobIdToJob.get(jobId);
+        return job != null ? job.schedule() : null;
+    }
+
+    @Override
+    public Object getSolverStatus(String jobId) {
+        return solverManager.getSolverStatus(jobId);
+    }
+}
+```
 
 ## Domain Class Requirement
 
