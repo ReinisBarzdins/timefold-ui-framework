@@ -75,7 +75,7 @@ public class SolutionStructureService {
             List<EntityInstanceDTO> entities = result.collection().stream()
                     .map(item -> {
                         EntityInstanceDTO entity = new EntityInstanceDTO();
-                        entity.setId(extractEntityId(item));
+                        entity.setId(formatObject(item));
                         entity.setLabel(formatObject(item));
                         entity.setPlanningVariables(extractPlanningVariables(item));
                         entity.setDetails(extractEntityDetails(item));
@@ -143,32 +143,6 @@ public class SolutionStructureService {
     private String extractEntityId(Object entity) {
         if (entity == null) {
             return null;
-        }
-
-        for (Field field : getAllFields(entity.getClass())) {
-            try {
-                field.setAccessible(true);
-                if (field.isAnnotationPresent(PlanningId.class)) {
-                    Object value = field.get(entity);
-                    return value != null ? String.valueOf(value) : null;
-                }
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(
-                        "Failed to access planning id field: " + field.getName(), e);
-            }
-        }
-
-        for (Field field : getAllFields(entity.getClass())) {
-            try {
-                field.setAccessible(true);
-                if ("id".equalsIgnoreCase(field.getName())) {
-                    Object value = field.get(entity);
-                    return value != null ? String.valueOf(value) : null;
-                }
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException(
-                        "Failed to access id field: " + field.getName(), e);
-            }
         }
 
         return formatObject(entity);
