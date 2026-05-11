@@ -37,11 +37,6 @@ public class TimestructToolController {
         return solutionAccess.listJobIds();
     }
 
-    @GetMapping(value = "/{jobId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Object getSolution(@PathVariable String jobId) {
-        return requireSolution(jobId);
-    }
-
     @GetMapping(value = "/{jobId}/score-explanation", produces = MediaType.APPLICATION_JSON_VALUE)
     public ScoreExplanationDTO getScoreExplanation(@PathVariable String jobId) {
         Object solution = requireSolution(jobId);
