@@ -1,6 +1,7 @@
 package io.github.reinisbarzdins.service;
 
-import ai.timefold.solver.core.api.score.ScoreExplanation;
+import ai.timefold.solver.core.api.score.analysis.ScoreAnalysis;
+import ai.timefold.solver.core.api.solver.ScoreAnalysisFetchPolicy;
 import ai.timefold.solver.core.api.solver.SolutionManager;
 import io.github.reinisbarzdins.dto.ScoreExplanationDTO;
 import io.github.reinisbarzdins.mapper.ScoreExplanationMapper;
@@ -25,7 +26,7 @@ public class ScoreExplanationService {
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     public ScoreExplanationDTO explain(Object solution) {
-        ScoreExplanation explanation = solutionManager.explain(solution);
-        return scoreExplanationMapper.map(explanation);
+        ScoreAnalysis analysis = solutionManager.analyze(solution, ScoreAnalysisFetchPolicy.FETCH_ALL);
+        return scoreExplanationMapper.map(analysis);
     }
 }

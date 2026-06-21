@@ -9,17 +9,25 @@ A debug UI tool for [Timefold](https://timefold.ai/) based Spring Boot applicati
 
 ## Requirements
 
-- Java 17+
+- Java 21
 
-- Spring Boot
+- Spring Boot 4.1.0
 
-- Timefold Solver
+- Timefold Solver 2.2.0 (Enterprise Edition) — valid Timefold license required
 
 ⚠️ Important: The latest version of the devtool currently supports:
 
-- Timefold Solver v1.27.0
+- Java 21
 
-- Spring Boot v3.5.10
+- Spring Boot 4.1.0
+
+- Timefold Solver 2.2.0 Enterprise
+
+> ⚠️ **Enterprise license required.** Starting with `2.0.0`, the debug UI relies on the
+> `ScoreAnalysis` API, which Timefold provides **only in the Plus and Enterprise editions**
+> (the `ScoreExplanation` API used previously was removed in Timefold Solver v2). The library
+> therefore depends on the Timefold Enterprise artifacts, and a valid Timefold license is
+> required at runtime (and to build from source). See [License Setup](#license-setup) below.
 
 ---
 
@@ -31,11 +39,33 @@ Add the dependency to your `pom.xml`:
 <dependency>
     <groupId>io.github.reinisbarzdins</groupId>
     <artifactId>timestruct-debug-ui</artifactId>
-    <version>1.1.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
-No additional configuration is required. The library uses Spring Boot auto-configuration and registers itself automatically when the dependency is present.
+The library pulls in the Timefold Enterprise Spring Boot starter transitively. The Enterprise
+artifacts are published to **Maven Central**, so no additional Maven repository configuration is
+required. The library uses Spring Boot auto-configuration and registers itself automatically when
+the dependency is present.
+
+---
+
+## License Setup
+
+The Timefold Enterprise artifacts perform a license check at runtime. Obtain a license from the
+[Timefold license portal](https://licenses.timefold.ai/) and supply it using **one** of the
+following methods (checked in this order):
+
+1. **`TIMEFOLD_LICENSE`** — environment variable containing the license (PEM contents). Useful
+   for CI and containerized deployments.
+2. **`TIMEFOLD_LICENSE_PATH`** — environment variable containing the absolute path to your
+   license file.
+3. **`timefold-license.pem` in your user home directory** — Timefold auto-detects this file. The
+   file name must match exactly, including letter case.
+
+> ⚠️ **Never commit your license.** Keep the `.pem` file outside the repository (the user home
+> directory works well) or inject it via an environment variable / CI secret. This project's
+> `.gitignore` already excludes `*.pem`, `.env`, `.env.local`, and `licenses/` as a safeguard.
 
 ---
 
@@ -193,6 +223,19 @@ The library follows a job-based model:
 3. `TimefoldSolutionAccess` exposes jobs to the debug UI
 4. The UI fetches job data via the REST endpoints and visualizes the solution structure and score explanation in real time
 5. While the solver is running, the UI automatically refetches the current solution every **5 seconds**, so you can watch the solution improve live without manually refreshing the page
+
+### Score analysis & indictments
+
+Score data is collected via `SolutionManager.analyze(solution, ScoreAnalysisFetchPolicy.FETCH_ALL)`,
+which returns a Timefold `ScoreAnalysis`. The per-constraint breakdown and sample matches map
+directly from `ScoreAnalysis.constraintAnalyses()`.
+
+> ⚠️ **Custom justification caveat.** Timefold v2 removed the `Indictment` API, so the per-entity
+> impact view ("indictments") is **reconstructed** by summing each match's score over its justified
+> objects. This works out of the box for constraints using the default justification
+> (`DefaultConstraintJustification`). If your constraints provide a **custom**
+> `ConstraintJustification` (via `.justifyWith(...)`), it carries no fact list, so indicted objects
+> fall back to the justification's `toString()` and per-entity grouping may be less precise.
 
 ---
 

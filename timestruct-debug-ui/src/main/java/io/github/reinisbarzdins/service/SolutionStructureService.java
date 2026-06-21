@@ -1,14 +1,11 @@
 package io.github.reinisbarzdins.service;
 
-import ai.timefold.solver.core.api.domain.lookup.PlanningId;
 import ai.timefold.solver.core.api.domain.solution.PlanningEntityCollectionProperty;
 import ai.timefold.solver.core.api.domain.solution.ProblemFactCollectionProperty;
-import ai.timefold.solver.core.api.domain.variable.AnchorShadowVariable;
 import ai.timefold.solver.core.api.domain.variable.CascadingUpdateShadowVariable;
 import ai.timefold.solver.core.api.domain.variable.IndexShadowVariable;
 import ai.timefold.solver.core.api.domain.variable.InverseRelationShadowVariable;
 import ai.timefold.solver.core.api.domain.variable.NextElementShadowVariable;
-import ai.timefold.solver.core.api.domain.variable.PiggybackShadowVariable;
 import ai.timefold.solver.core.api.domain.variable.PlanningListVariable;
 import ai.timefold.solver.core.api.domain.variable.PlanningVariable;
 import ai.timefold.solver.core.api.domain.variable.PreviousElementShadowVariable;
@@ -32,12 +29,10 @@ public class SolutionStructureService {
             PlanningVariable.class,
             PlanningListVariable.class,
             InverseRelationShadowVariable.class,
-            AnchorShadowVariable.class,
             IndexShadowVariable.class,
             PreviousElementShadowVariable.class,
             NextElementShadowVariable.class,
             ShadowVariable.class,
-            PiggybackShadowVariable.class,
             CascadingUpdateShadowVariable.class,
             ShadowVariablesInconsistent.class
     );

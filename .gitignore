@@ -11,3 +11,9 @@ target/
 # Frontend
 frontend/node_modules/
 frontend/dist/
+
+# Secrets / licenses
+*.pem
+.env
+.env.local
+licenses/

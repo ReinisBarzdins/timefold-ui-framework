@@ -1,6 +1,10 @@
 package io.github.reinisbarzdins.mapper;
 
-import ai.timefold.solver.core.api.score.ScoreExplanation;
+import ai.timefold.solver.core.api.score.Score;
+import ai.timefold.solver.core.api.score.analysis.ConstraintAnalysis;
+import ai.timefold.solver.core.api.score.analysis.MatchAnalysis;
+import ai.timefold.solver.core.api.score.analysis.ScoreAnalysis;
+import ai.timefold.solver.core.api.score.stream.DefaultConstraintJustification;
 import io.github.reinisbarzdins.dto.ConstraintDTO;
 import io.github.reinisbarzdins.dto.IndictmentDTO;
 import io.github.reinisbarzdins.dto.MatchDTO;
@@ -8,54 +12,75 @@ import io.github.reinisbarzdins.dto.ScoreExplanationDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class ScoreExplanationMapper {
-    public ScoreExplanationDTO map(ScoreExplanation<?, ?> explanation) {
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public ScoreExplanationDTO map(ScoreAnalysis<?> analysis) {
         ScoreExplanationDTO result = new ScoreExplanationDTO();
         List<ConstraintDTO> constraints = new ArrayList<>();
-        List<IndictmentDTO> indictments = new ArrayList<>();
 
-        explanation.getConstraintMatchTotalMap().forEach((name, constraintMatchTotal) -> {
+        // Indictments no longer exist in Timefold 2.x; reconstruct them from match
+        // justifications by summing each match's score onto every justified object.
+        Map<String, Score> indictmentScores = new LinkedHashMap<>();
+
+        for (ConstraintAnalysis<?> constraintAnalysis : analysis.constraintAnalyses()) {
             ConstraintDTO constraint = new ConstraintDTO();
-            constraint.setName(name);
-            constraint.setImpactTotal(constraintMatchTotal.getScore().toString());
-            constraint.setMatchCount(constraintMatchTotal.getConstraintMatchSet().size());
+            constraint.setName(constraintAnalysis.constraintRef().id());
+            constraint.setImpactTotal(constraintAnalysis.score().toString());
+            constraint.setMatchCount(constraintAnalysis.matchCount());
 
-            List<MatchDTO> sampleMatches = constraintMatchTotal.getConstraintMatchSet()
-                    .stream()
-                    .map(match -> {
-                        MatchDTO matchDto = new MatchDTO();
-                        matchDto.setImpact(match.getScore().toString());
+            List<MatchDTO> sampleMatches = new ArrayList<>();
+            List<? extends MatchAnalysis<?>> matches = constraintAnalysis.matches();
 
-                        List<String> objects = match.getIndictedObjectList()
-                                .stream()
-                                .map(Object::toString)
-                                .toList();
+            if (matches != null) {
+                for (MatchAnalysis<?> match : matches) {
+                    MatchDTO matchDto = new MatchDTO();
+                    matchDto.setImpact(match.score().toString());
 
-                        matchDto.setObjects(objects);
+                    List<Object> indictedObjects = extractIndictedObjects(match);
+                    matchDto.setObjects(indictedObjects.stream().map(Object::toString).toList());
 
-                        return matchDto;
-                    })
-                    .toList();
+                    sampleMatches.add(matchDto);
+
+                    for (Object indictedObject : indictedObjects) {
+                        String key = indictedObject.toString();
+                        indictmentScores.compute(key,
+                                (k, current) -> current == null ? match.score() : current.add((Score) match.score()));
+                    }
+                }
+            }
 
             constraint.setSampleMatches(sampleMatches);
             constraints.add(constraint);
-        });
+        }
 
-        explanation.getIndictmentMap().forEach((obj, indictment) -> {
+        List<IndictmentDTO> indictments = new ArrayList<>();
+        indictmentScores.forEach((object, score) -> {
             IndictmentDTO indictmentDTO = new IndictmentDTO();
-            indictmentDTO.setObject(obj.toString());
-            indictmentDTO.setImpactTotal(indictment.getScore().toString());
-
+            indictmentDTO.setObject(object);
+            indictmentDTO.setImpactTotal(score.toString());
             indictments.add(indictmentDTO);
         });
 
-        result.setScore(explanation.getScore().toString());
+        result.setScore(analysis.score().toString());
         result.setIndictments(indictments);
         result.setConstraints(constraints);
 
         return result;
+    }
+
+    private List<Object> extractIndictedObjects(MatchAnalysis<?> match) {
+        if (match.justification() instanceof DefaultConstraintJustification defaultJustification) {
+            return new ArrayList<>(defaultJustification.getFacts());
+        }
+
+        match.justification();
+
+        return List.of(match.justification());
     }
 }
